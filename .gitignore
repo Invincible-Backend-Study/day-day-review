@@ -44,6 +44,9 @@
 # *.iml
 # *.ipr
 
+# Custom
+configs/**
+
 # CMake
 cmake-build-*/
 
