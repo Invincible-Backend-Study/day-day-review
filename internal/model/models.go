@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -11,7 +10,7 @@ type FeelScore struct {
 }
 
 type Scrum struct {
-	UserId     uuid.UUID
+	UserId     int64
 	Goal       string
 	Commitment string
 	Feels      FeelScore
@@ -19,7 +18,7 @@ type Scrum struct {
 }
 
 type Retrospection struct {
-	UserId       uuid.UUID
+	UserId       int64
 	GoalAchieved string
 	Learned      string
 	Feels        FeelScore
@@ -27,7 +26,7 @@ type Retrospection struct {
 }
 
 type User struct {
-	UserId     uuid.UUID
-	Name       string
-	DiscordKey string
+	UserId        int64
+	Name          string
+	DiscordUserId string
 }
