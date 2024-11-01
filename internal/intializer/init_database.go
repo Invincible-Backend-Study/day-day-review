@@ -17,9 +17,8 @@ func InitDatabase() (*sql.DB, error) {
 
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS user (
-		user_id INTEGER PRIMARY KEY,
-		name TEXT NOT NULL,
-		discord_user_id TEXT NOT NULL UNIQUE
+		discord_user_id CHAR(30) PRIMARY KEY,
+	    name CHAR(20) NOT NULL
 	);
 	`
 	_, err = db.Exec(createTableQuery)
