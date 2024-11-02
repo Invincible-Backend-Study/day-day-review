@@ -23,7 +23,7 @@ func InitDatabase() (*sql.DB, error) {
 	`
 	_, err = db.Exec(createTableQuery)
 	if err != nil {
-		log.Fatalf("Table Creation fail: %v", err)
+		log.Fatalln("Table Creation fail: ", err)
 		return nil, err
 	}
 

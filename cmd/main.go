@@ -44,7 +44,7 @@ func main() {
 
 	discord.AddHandler(handler.EasterEggHandler)
 	discord.AddHandler(manager.RegisterCommands)
-	discord.AddHandler(manager.RegisterHandleInteraction)
+	discord.AddHandler(manager.RegisterInteractions)
 
 	err = discord.Open()
 	if err != nil {

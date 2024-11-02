@@ -9,84 +9,104 @@ import (
 	"log"
 )
 
+// Manager 봇의 핸들러를 관리합니다.
 type Manager struct {
 	db      *sql.DB
 	guildId string
 }
 
+// NewHandlerManager 새로운 핸들러 매니저를 생성합니다.
 func NewHandlerManager(db *sql.DB, guildId string) *Manager {
 	return &Manager{
 		db: db, guildId: guildId,
 	}
 }
 
+// RegisterCommands 봇에 명령어를 등록합니다. 명령어는 commands.go에 정의되어 있습니다.
 func (manager *Manager) RegisterCommands(s *discordgo.Session, _ *discordgo.Ready) {
-	_, err := s.ApplicationCommandCreate(s.State.User.ID, manager.guildId, &discordgo.ApplicationCommand{
-		Name:        "회원-등록",
-		Description: "닉네임을 등록합니다",
-	})
-	if err != nil {
-		log.Fatalf("Cannot create command: %v", err)
+	for _, cmd := range commands {
+		_, err := s.ApplicationCommandCreate(s.State.User.ID, manager.guildId, cmd)
+		if err != nil {
+			log.Printf("Cannot create command: %v\n", err)
+		}
 	}
 }
 
-func (manager *Manager) RegisterHandleInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type == discordgo.InteractionApplicationCommand && i.ApplicationCommandData().Name == "회원-등록" {
-		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseModal,
-			Data: &discordgo.InteractionResponseData{
-				Title:    "닉네임 입력",
-				CustomID: "nickname_modal",
-				Components: []discordgo.MessageComponent{
-					discordgo.ActionsRow{
-						Components: []discordgo.MessageComponent{
-							discordgo.TextInput{
-								CustomID:    "nickname_input",
-								Label:       "닉네임을 입력하세요",
-								Style:       discordgo.TextInputShort,
-								Placeholder: "닉네임",
-								Required:    true,
-							},
-						},
-					},
-				},
-			},
-		})
+// RegisterInteractions 봇의 상호작용을 처리합니다.
+func (manager *Manager) RegisterInteractions(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	switch interaction.Type {
+	case discordgo.InteractionApplicationCommand:
+		manager.handleApplicationCommand(session, interaction)
+	case discordgo.InteractionModalSubmit:
+		manager.handleModalSubmit(session, interaction)
+	}
+}
+
+// handleApplicationCommand 봇의 명령어를 처리합니다.
+func (manager *Manager) handleApplicationCommand(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	switch interaction.ApplicationCommandData().Name {
+	case commandRegisterUser:
+		err := session.InteractionRespond(interaction.Interaction, createRegisterUserModal())
 		if err != nil {
 			log.Printf("Error responding with modal: %v", err)
 		}
-	} else if i.Type == discordgo.InteractionModalSubmit && i.ModalSubmitData().CustomID == "nickname_modal" {
-		// 닉네임 입력 후 실행할 작업을 여기에 추가
-		nickname := i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value
-		userID := i.Member.User.ID
+	}
+}
 
-		err := repository.InsertUser(manager.db, model.User{Name: nickname, DiscordUserId: userID})
-		if err != nil {
-			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "이미 등록된 이름입니다. 다른 이름을 입력해주세요.",
-					Flags:   discordgo.MessageFlagsEphemeral, // 사용자에게만 보이는 메시지
-				},
-			})
-			if err != nil {
-				log.Printf("응답 실패: %v", err)
+// handleModalSubmit 모달의 제출을 처리합니다.
+func (manager *Manager) handleModalSubmit(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	switch interaction.ModalSubmitData().CustomID {
+	case cIdRegisterUserModal:
+		manager.interactionRegisterModal(session, interaction)
+	}
+}
+
+// interactionRegisterModal 사용자 등록 모달의 상호작용을 처리합니다.
+func (manager *Manager) interactionRegisterModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	nickname, err := extractValueFromComponent(interaction.ModalSubmitData().Components, cIdRegisterUserNicknameInput)
+	if err != nil {
+		log.Println("Error extracting value from component: ", err)
+		sendEphemeralMessage(session, interaction, "닉네임을 입력해주세요.")
+		return
+	}
+	userID := interaction.Member.User.ID
+
+	err = repository.InsertUser(manager.db, model.User{Name: nickname, DiscordUserId: userID})
+	if err != nil {
+		log.Println("Failed to insert user: ", err)
+		// TODO: 이미 등록된 닉네임인 경우와 사용자가 이미 등록된 경우 분기 어떻게 할건가요!
+		sendEphemeralMessage(session, interaction, "이미 등록된 이름입니다. 다른 이름을 입력해주세요.")
+		return
+	}
+	response := fmt.Sprintf("닉네임 '%s' 등록 완료!", nickname)
+
+	sendEphemeralMessage(session, interaction, response)
+	log.Println("Received nickname:", nickname)
+}
+
+// extractValueFromComponent 컴포넌트에서 값을 추출합니다.
+func extractValueFromComponent(components []discordgo.MessageComponent, customID string) (string, error) {
+	for _, component := range components {
+		if actionRow, ok := component.(*discordgo.ActionsRow); ok {
+			for _, item := range actionRow.Components {
+				if input, ok := item.(*discordgo.TextInput); ok && input.CustomID == customID {
+					return input.Value, nil
+				}
 			}
-			return
 		}
-		response := fmt.Sprintf("닉네임 '%s' 등록 완료!", nickname)
+	}
+	return "", fmt.Errorf("component with customID %v not found", customID)
+}
 
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: response,
-				Flags:   discordgo.MessageFlagsEphemeral, // 사용자에게만 보이는 메시지
-			},
-		})
-		if err != nil {
-			log.Println("Error responding to modal submit:", err)
-		}
-
-		log.Println("Received nickname:", nickname)
+// sendEphemeralMessage 개인 메시지를 전송합니다.
+func sendEphemeralMessage(session *discordgo.Session, interaction *discordgo.InteractionCreate, content string) {
+	if err := session.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: content,
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	}); err != nil {
+		log.Println("Error responding with ephemeral message: ", err)
 	}
 }
