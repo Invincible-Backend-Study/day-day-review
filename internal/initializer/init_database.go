@@ -20,6 +20,17 @@ func InitDatabase() (*sql.DB, error) {
 		discord_user_id CHAR(30) PRIMARY KEY,
 	    name CHAR(20) NOT NULL UNIQUE
 	);
+
+	CREATE TABLE IF NOT EXISTS scrum (
+		user_id INTEGER NOT NULL,
+		goal TEXT NOT NULL,
+		commitment TEXT,
+		feel_score INTEGER,
+		feel_reason TEXT,
+		created_at TIMESTAMP DEFAULT (datetime('now', '+09:00')),
+		
+		PRIMARY KEY (user_id, created_at)
+	);
 	`
 	_, err = db.Exec(createTableQuery)
 	if err != nil {
