@@ -2,13 +2,11 @@ package handler
 
 import (
 	"database/sql"
-	"day-day-review/internal/model"
-	"day-day-review/internal/repository"
+	"day-day-review/internal/service"
 	"fmt"
 	"log"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/mattn/go-sqlite3"
 )
 
 // Manager 봇의 핸들러를 관리합니다.
@@ -65,35 +63,19 @@ func (manager *Manager) handleModalSubmit(session *discordgo.Session, interactio
 
 // interactionRegisterModal 사용자 등록 모달의 상호작용을 처리합니다.
 func (manager *Manager) interactionRegisterModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
-	nickname, err := extractValueFromComponent(interaction.ModalSubmitData().Components, cIdRegisterUserNicknameInput)
+	nickname, err := extractValueFromComponent(interaction.
+		ModalSubmitData().Components, cIdRegisterUserNicknameInput)
 	if err != nil {
 		log.Println("Error extracting value from component: ", err)
 		sendEphemeralMessage(session, interaction, "닉네임을 입력해주세요.")
 		return
 	}
-	userID := interaction.Member.User.ID
+	log.Println("Received nickname:", nickname)
 
-	err = repository.InsertUser(manager.db, model.User{Name: nickname, DiscordUserId: userID})
-	if err != nil {
-		log.Println("Failed to insert user: ", err)
-		sqliteErr, ok := err.(sqlite3.Error)
-		log.Println(sqliteErr)
-		if ok && sqliteErr.Code == sqlite3.ErrConstraint {
-			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				sendEphemeralMessage(session, interaction, "이미 등록한 사용자입니다.")
-				log.Println("discord_user_id already exists: %w", err)
-			}
-			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-				sendEphemeralMessage(session, interaction, "이미 등록된 이름입니다. 다른 이름을 입력해주세요.")
-				log.Println("name already exists: %w", err)
-			}
-		}
-		return
-	}
-	response := fmt.Sprintf("닉네임 '%s' 등록 완료!", nickname)
+	userId := interaction.Member.User.ID
+	response := service.RegisterUser(manager.db, nickname, userId)
 
 	sendEphemeralMessage(session, interaction, response)
-	log.Println("Received nickname:", nickname)
 }
 
 // extractValueFromComponent 컴포넌트에서 값을 추출합니다.
