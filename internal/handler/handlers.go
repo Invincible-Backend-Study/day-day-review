@@ -5,6 +5,7 @@ import (
 	"day-day-review/internal/service"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -50,6 +51,11 @@ func (manager *Manager) handleApplicationCommand(session *discordgo.Session, int
 		if err != nil {
 			log.Printf("Error responding with modal: %v", err)
 		}
+	case commandRegisterTodayScrum:
+		err := session.InteractionRespond(interaction.Interaction, createRegisterScrumModal())
+		if err != nil {
+			log.Printf("Error responding with modal: %v", err)
+		}
 	}
 }
 
@@ -57,25 +63,10 @@ func (manager *Manager) handleApplicationCommand(session *discordgo.Session, int
 func (manager *Manager) handleModalSubmit(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	switch interaction.ModalSubmitData().CustomID {
 	case cIdRegisterUserModal:
-		manager.interactionRegisterModal(session, interaction)
+		manager.interactionRegisterUserModal(session, interaction)
+	case cIdRegisterScrumModal:
+		manager.interactionRegisterScrumModal(session, interaction)
 	}
-}
-
-// interactionRegisterModal 사용자 등록 모달의 상호작용을 처리합니다.
-func (manager *Manager) interactionRegisterModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
-	nickname, err := extractValueFromComponent(interaction.
-		ModalSubmitData().Components, cIdRegisterUserNicknameInput)
-	if err != nil {
-		log.Println("Error extracting value from component: ", err)
-		sendEphemeralMessage(session, interaction, "닉네임을 입력해주세요.")
-		return
-	}
-	log.Println("Received nickname:", nickname)
-
-	userId := interaction.Member.User.ID
-	response := service.RegisterUser(manager.db, nickname, userId)
-
-	sendEphemeralMessage(session, interaction, response)
 }
 
 // extractValueFromComponent 컴포넌트에서 값을 추출합니다.
@@ -103,4 +94,70 @@ func sendEphemeralMessage(session *discordgo.Session, interaction *discordgo.Int
 	}); err != nil {
 		log.Println("Error responding with ephemeral message: ", err)
 	}
+}
+
+// interactionRegisterUserModal 사용자 등록 모달의 상호작용을 처리합니다.
+func (manager *Manager) interactionRegisterUserModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	nickname, err := extractValueFromComponent(interaction.
+		ModalSubmitData().Components, cIdRegisterUserNicknameInput)
+	if err != nil {
+		log.Println("Error extracting value from component: ", err)
+		sendEphemeralMessage(session, interaction, "닉네임을 입력해주세요.")
+		return
+	}
+	log.Println("Received nickname:", nickname)
+
+	userId := interaction.Member.User.ID
+
+	response := service.RegisterUser(manager.db, nickname, userId)
+
+	sendEphemeralMessage(session, interaction, response)
+}
+
+// interactionRegisterScrumModal 오늘의 다짐 등록 모달의 상호작용을 처리합니다.
+func (manager *Manager) interactionRegisterScrumModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	goal, err := extractValueFromComponent(interaction.
+		ModalSubmitData().Components, cIdRegisterScrumGoalInput)
+	if err != nil {
+		log.Println("Error extracting value from component: ", err)
+		sendEphemeralMessage(session, interaction, "닉네임을 입력해주세요.")
+		return
+	}
+
+	commitment, err := extractValueFromComponent(interaction.
+		ModalSubmitData().Components, cIdRegisterScrumCommitmentInput)
+	if err != nil {
+		log.Println("Error extracting value from component: ", err)
+		sendEphemeralMessage(session, interaction, "오늘의 다짐을 입력해주세요.")
+		return
+	}
+
+	feelScoreStr, err := extractValueFromComponent(interaction.
+		ModalSubmitData().Components, cIdRegisterScrumScoreInput)
+	if err != nil {
+		log.Println("Error extracting value from component: ", err)
+		sendEphemeralMessage(session, interaction, "기분 점수를 입력해주세요.")
+		return
+	}
+	feelScore, err := strconv.Atoi(feelScoreStr)
+	if err != nil {
+		log.Println("Error converting string to int:", err)
+		sendEphemeralMessage(session, interaction, "기분 점수는 0 이상 10 이하 숫자로 입력해주세요.")
+		return
+	}
+
+	feelReason, err := extractValueFromComponent(interaction.
+		ModalSubmitData().Components, cIdRegisterScrumReasonInput)
+	if err != nil {
+		log.Println("Error extracting value from component: ", err)
+		sendEphemeralMessage(session, interaction, "기분 점수의 이유를 입력해주세요.")
+		return
+	}
+
+	// log.Println(goal, commitment, feelScore, feelReason)
+	userId := interaction.Member.User.ID
+
+	response := service.CreateTodayScrumByUserId(manager.db, userId, goal, commitment, feelReason, feelScore)
+
+	sendEphemeralMessage(session, interaction, response)
 }
