@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"day-day-review/internal/handler"
-	"day-day-review/internal/intializer"
+	"day-day-review/internal/initializer"
 	"flag"
 	"log"
 	"os"
@@ -26,7 +26,7 @@ func init() {
 	flag.Parse()
 
 	var err error
-	db, err = intializer.InitDatabase()
+	db, err = initializer.InitDatabase()
 	if err != nil {
 		log.Fatal("error initializing database", err)
 	}

@@ -1,4 +1,4 @@
-package intializer
+package initializer
 
 import (
 	"database/sql"
@@ -18,7 +18,7 @@ func InitDatabase() (*sql.DB, error) {
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS user (
 		discord_user_id CHAR(30) PRIMARY KEY,
-	    name CHAR(20) NOT NULL
+	    name CHAR(20) NOT NULL UNIQUE
 	);
 	`
 	_, err = db.Exec(createTableQuery)
