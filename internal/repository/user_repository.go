@@ -22,7 +22,7 @@ func InsertUser(db *sql.DB, user model.User) error {
 
 	result, err := stmt.Exec(user.Name, user.DiscordUserId)
 	if err != nil {
-		return fmt.Errorf("failed to execute insert: %v", err)
+		return err
 	}
 
 	id, err := result.LastInsertId()

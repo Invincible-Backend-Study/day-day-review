@@ -5,8 +5,10 @@ import (
 	"day-day-review/internal/model"
 	"day-day-review/internal/repository"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/mattn/go-sqlite3"
 )
 
 // Manager 봇의 핸들러를 관리합니다.
@@ -74,8 +76,18 @@ func (manager *Manager) interactionRegisterModal(session *discordgo.Session, int
 	err = repository.InsertUser(manager.db, model.User{Name: nickname, DiscordUserId: userID})
 	if err != nil {
 		log.Println("Failed to insert user: ", err)
-		// TODO: 이미 등록된 닉네임인 경우와 사용자가 이미 등록된 경우 분기 어떻게 할건가요!
-		sendEphemeralMessage(session, interaction, "이미 등록된 이름입니다. 다른 이름을 입력해주세요.")
+		sqliteErr, ok := err.(sqlite3.Error)
+		log.Println(sqliteErr)
+		if ok && sqliteErr.Code == sqlite3.ErrConstraint {
+			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
+				sendEphemeralMessage(session, interaction, "이미 등록한 사용자입니다.")
+				log.Println("discord_user_id already exists: %w", err)
+			}
+			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+				sendEphemeralMessage(session, interaction, "이미 등록된 이름입니다. 다른 이름을 입력해주세요.")
+				log.Println("name already exists: %w", err)
+			}
+		}
 		return
 	}
 	response := fmt.Sprintf("닉네임 '%s' 등록 완료!", nickname)
