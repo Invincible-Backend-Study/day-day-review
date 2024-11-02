@@ -5,6 +5,7 @@ import (
 	"day-day-review/internal/model"
 	"day-day-review/internal/repository"
 	"day-day-review/internal/util"
+	"errors"
 	"fmt"
 	"log"
 
@@ -17,13 +18,13 @@ func RegisterUser(db *sql.DB, nickname string, userId string) string {
 	if err != nil {
 		log.Println("Failed to insert user: ", err)
 
-		sqliteErr, ok := err.(sqlite3.Error)
-		if ok && sqliteErr.Code == sqlite3.ErrConstraint {
-			switch sqliteErr.ExtendedCode {
-			case sqlite3.ErrConstraintPrimaryKey:
+		var sqliteErr sqlite3.Error
+		if ok := errors.As(err, &sqliteErr); ok && errors.Is(sqliteErr.Code, sqlite3.ErrConstraint) {
+			switch {
+			case errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintPrimaryKey):
 				log.Printf("discord_user_id already exists: %v - %s", err, userId)
 				return "이미 등록한 사용자입니다."
-			case sqlite3.ErrConstraintUnique:
+			case errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique):
 				log.Printf("name already exists: %v - %s", err, nickname)
 				return "이미 등록된 이름입니다. 다른 이름을 입력해주세요."
 			}
