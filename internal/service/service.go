@@ -35,7 +35,7 @@ func RegisterUser(db *sql.DB, nickname string, userId string) string {
 	return fmt.Sprintf("닉네임 '%s' 등록 완료!", nickname)
 }
 
-// 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
+// CreateTodayScrumByUserId 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
 func CreateTodayScrumByUserId(db *sql.DB, userId, goal, commitment, feelReason string, feelScore int) string {
 	scrum := model.Scrum{
 		UserId:     userId,
