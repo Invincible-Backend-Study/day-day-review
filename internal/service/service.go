@@ -37,6 +37,8 @@ func RegisterUser(db *sql.DB, nickname string, userId string) string {
 
 // CreateTodayScrumByUserId 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
 func CreateTodayScrumByUserId(db *sql.DB, userId, goal, commitment, feelReason string, feelScore int) string {
+	// TODO: 이미 오늘의 다짐을 작성했는지 확인하는 로직 추가
+
 	scrum := model.Scrum{
 		UserId:     userId,
 		Goal:       goal,
@@ -48,7 +50,7 @@ func CreateTodayScrumByUserId(db *sql.DB, userId, goal, commitment, feelReason s
 		CreatedAt: util.GetTodayInKST(),
 	}
 
-	err := repository.InsertScrum(db, scrum)
+	_, err := repository.InsertScrum(db, scrum)
 	if err != nil {
 		log.Println("Error inserting scrum data:", err)
 		return "에러가 발생했습니다."
