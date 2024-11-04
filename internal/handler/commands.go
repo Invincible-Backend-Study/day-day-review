@@ -6,6 +6,7 @@ import "github.com/bwmarrin/discordgo"
 const (
 	commandRegisterUser       = "회원-등록"
 	commandRegisterTodayScrum = "오늘-다짐"
+	commandGetTodayScrums     = "오늘-다짐-보기"
 )
 
 const (
@@ -28,5 +29,9 @@ var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        commandRegisterTodayScrum,
 		Description: "오늘의 다짐을 등록합니다",
+	},
+	{
+		Name:        commandGetTodayScrums,
+		Description: "오늘의 다짐을 모두 보여줍니다",
 	},
 }

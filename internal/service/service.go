@@ -11,6 +11,10 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
+func init() {
+	repository.Initialize("configs/dayday.db")
+}
+
 // AddUser 함수는 주어진 nickname과 userId로 새로운 사용자 레코드를 데이터베이스에 추가합니다.
 func AddUser(nickname string, userId string) string {
 	err := repository.InsertUser(model.User{Name: nickname, DiscordUserId: userId})
@@ -36,8 +40,6 @@ func AddUser(nickname string, userId string) string {
 
 // CreateTodayScrum 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
 func CreateTodayScrum(userId, goal, commitment, feelReason string, feelScore int) string {
-	// TODO: 이미 오늘의 다짐을 작성했는지 확인하는 로직 추가
-
 	scrum := model.Scrum{
 		UserId:     userId,
 		Goal:       goal,
@@ -69,6 +71,11 @@ func ExistTodayScrum(userId string) (bool, error) {
 	return result, nil
 }
 
-func init() {
-	repository.Initialize("configs/dayday.db")
+// GetTodayScrums 작성된 오늘의 다짐을 모두 반환합니다.
+func GetTodayScrums() ([]model.ScrumDto, error) {
+	scrums, err := repository.SelectTodayScrumList(util.GetTodayInKST())
+	if err != nil {
+		return nil, err
+	}
+	return scrums, nil
 }
