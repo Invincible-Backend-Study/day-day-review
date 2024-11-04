@@ -5,15 +5,35 @@ import (
 	"day-day-review/internal/model"
 	"fmt"
 	"log"
+	"sync"
 )
 
-const (
-	insertUserQuery  = `INSERT INTO User (name, discord_user_id) VALUES (?, ?)`
-	insertScrumQuery = `INSERT INTO Scrum (user_id, goal, commitment, feel_score, feel_reason, created_at) VALUES (?, ?, ?, ?, ?, ?)`
+var (
+	database *sql.DB
+	once     sync.Once
 )
 
-func InsertUser(db *sql.DB, user model.User) error {
-	stmt, err := db.Prepare(insertUserQuery)
+func Initialize(filePath string) {
+	once.Do(func() {
+		initRepository(filePath)
+	})
+}
+
+func initRepository(filePath string) {
+	var err error
+	database, err = sql.Open("sqlite3", filePath)
+	if err != nil {
+		log.Fatalf("database Connection fail: %v", err)
+	}
+	_, err = database.Exec(createTableQuery)
+	if err != nil {
+		log.Println("Table Creation fail: ", err)
+	}
+	log.Println("Database Initialize Completed")
+}
+
+func InsertUser(user model.User) error {
+	stmt, err := database.Prepare(insertUserQuery)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %v", err)
 	}
@@ -31,9 +51,9 @@ func InsertUser(db *sql.DB, user model.User) error {
 	return nil
 }
 
-func InsertScrum(db *sql.DB, scrum model.Scrum) (*model.Scrum, error) {
+func InsertScrum(scrum model.Scrum) (*model.Scrum, error) {
 	// Prepared statement 생성
-	stmt, err := db.Prepare(insertScrumQuery)
+	stmt, err := database.Prepare(insertScrumQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}

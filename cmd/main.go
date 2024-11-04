@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"day-day-review/internal/handler"
 	"day-day-review/internal/initializer"
 	"log"
@@ -13,10 +12,7 @@ import (
 )
 
 var (
-	token   string
-	guildID string
-	db      *sql.DB
-	manager *handler.Manager
+	token string
 )
 
 func init() {
@@ -26,14 +22,8 @@ func init() {
 		log.Fatal("error loading discord config", err)
 	}
 	token = discordConfig.Token
-	guildID = discordConfig.Guild
 
-	// Initialize Database
-	db, err = initializer.InitDatabase("configs/dayday.db")
-	if err != nil {
-		log.Fatal("error initializing database", err)
-	}
-	manager = handler.NewHandlerManager(db, guildID)
+	handler.SetGuildId(discordConfig.Guild)
 }
 
 func main() {
@@ -45,8 +35,8 @@ func main() {
 	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMessageReactions | discordgo.IntentsGuilds
 
 	discord.AddHandler(handler.EasterEggHandler)
-	discord.AddHandler(manager.RegisterCommands)
-	discord.AddHandler(manager.RegisterInteractions)
+	discord.AddHandler(handler.RegisterCommands)
+	discord.AddHandler(handler.RegisterInteractions)
 
 	err = discord.Open()
 	if err != nil {

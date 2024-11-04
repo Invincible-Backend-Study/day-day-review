@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"database/sql"
 	"day-day-review/internal/service"
 	"fmt"
 	"log"
@@ -10,23 +9,18 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// Manager 봇의 핸들러를 관리합니다.
-type Manager struct {
-	db      *sql.DB
+var (
 	guildId string
-}
+)
 
-// NewHandlerManager 새로운 핸들러 매니저를 생성합니다.
-func NewHandlerManager(db *sql.DB, guildId string) *Manager {
-	return &Manager{
-		db: db, guildId: guildId,
-	}
+func SetGuildId(id string) {
+	guildId = id
 }
 
 // RegisterCommands 봇에 명령어를 등록합니다. 명령어는 commands.go에 정의되어 있습니다.
-func (manager *Manager) RegisterCommands(s *discordgo.Session, _ *discordgo.Ready) {
+func RegisterCommands(s *discordgo.Session, _ *discordgo.Ready) {
 	for _, cmd := range commands {
-		_, err := s.ApplicationCommandCreate(s.State.User.ID, manager.guildId, cmd)
+		_, err := s.ApplicationCommandCreate(s.State.User.ID, guildId, cmd)
 		if err != nil {
 			log.Printf("Cannot create command: %v\n", err)
 		}
@@ -34,17 +28,17 @@ func (manager *Manager) RegisterCommands(s *discordgo.Session, _ *discordgo.Read
 }
 
 // RegisterInteractions 봇의 상호작용을 처리합니다.
-func (manager *Manager) RegisterInteractions(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+func RegisterInteractions(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	switch interaction.Type {
 	case discordgo.InteractionApplicationCommand:
-		manager.handleApplicationCommand(session, interaction)
+		handleApplicationCommand(session, interaction)
 	case discordgo.InteractionModalSubmit:
-		manager.handleModalSubmit(session, interaction)
+		handleModalSubmit(session, interaction)
 	}
 }
 
 // handleApplicationCommand 봇의 명령어를 처리합니다.
-func (manager *Manager) handleApplicationCommand(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+func handleApplicationCommand(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	switch interaction.ApplicationCommandData().Name {
 	case commandRegisterUser:
 		err := session.InteractionRespond(interaction.Interaction, createRegisterUserModal())
@@ -60,12 +54,12 @@ func (manager *Manager) handleApplicationCommand(session *discordgo.Session, int
 }
 
 // handleModalSubmit 모달의 제출을 처리합니다.
-func (manager *Manager) handleModalSubmit(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+func handleModalSubmit(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	switch interaction.ModalSubmitData().CustomID {
 	case cIdRegisterUserModal:
-		manager.interactionRegisterUserModal(session, interaction)
+		interactionRegisterUserModal(session, interaction)
 	case cIdRegisterScrumModal:
-		manager.interactionRegisterScrumModal(session, interaction)
+		interactionRegisterScrumModal(session, interaction)
 	}
 }
 
@@ -97,7 +91,7 @@ func sendEphemeralMessage(session *discordgo.Session, interaction *discordgo.Int
 }
 
 // interactionRegisterUserModal 사용자 등록 모달의 상호작용을 처리합니다.
-func (manager *Manager) interactionRegisterUserModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+func interactionRegisterUserModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	nickname, err := extractValueFromComponent(interaction.
 		ModalSubmitData().Components, cIdRegisterUserNicknameInput)
 	if err != nil {
@@ -109,13 +103,13 @@ func (manager *Manager) interactionRegisterUserModal(session *discordgo.Session,
 
 	userId := interaction.Member.User.ID
 
-	response := service.RegisterUser(manager.db, nickname, userId)
+	response := service.AddUser(nickname, userId)
 
 	sendEphemeralMessage(session, interaction, response)
 }
 
 // interactionRegisterScrumModal 오늘의 다짐 등록 모달의 상호작용을 처리합니다.
-func (manager *Manager) interactionRegisterScrumModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+func interactionRegisterScrumModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	goal, err := extractValueFromComponent(interaction.
 		ModalSubmitData().Components, cIdRegisterScrumGoalInput)
 	if err != nil {
@@ -157,7 +151,7 @@ func (manager *Manager) interactionRegisterScrumModal(session *discordgo.Session
 	// log.Println(goal, commitment, feelScore, feelReason)
 	userId := interaction.Member.User.ID
 
-	response := service.CreateTodayScrumByUserId(manager.db, userId, goal, commitment, feelReason, feelScore)
+	response := service.CreateTodayScrum(userId, goal, commitment, feelReason, feelScore)
 
 	sendEphemeralMessage(session, interaction, response)
 }

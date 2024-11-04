@@ -1,7 +1,6 @@
 package service
 
 import (
-	"database/sql"
 	"day-day-review/internal/model"
 	"day-day-review/internal/repository"
 	"day-day-review/internal/util"
@@ -12,9 +11,9 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
-// RegisterUser 함수는 주어진 nickname과 userId로 새로운 사용자 레코드를 데이터베이스에 추가합니다.
-func RegisterUser(db *sql.DB, nickname string, userId string) string {
-	err := repository.InsertUser(db, model.User{Name: nickname, DiscordUserId: userId})
+// AddUser 함수는 주어진 nickname과 userId로 새로운 사용자 레코드를 데이터베이스에 추가합니다.
+func AddUser(nickname string, userId string) string {
+	err := repository.InsertUser(model.User{Name: nickname, DiscordUserId: userId})
 	if err != nil {
 		log.Println("Failed to insert user: ", err)
 
@@ -35,8 +34,8 @@ func RegisterUser(db *sql.DB, nickname string, userId string) string {
 	return fmt.Sprintf("닉네임 '%s' 등록 완료!", nickname)
 }
 
-// CreateTodayScrumByUserId 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
-func CreateTodayScrumByUserId(db *sql.DB, userId, goal, commitment, feelReason string, feelScore int) string {
+// CreateTodayScrum 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
+func CreateTodayScrum(userId, goal, commitment, feelReason string, feelScore int) string {
 	// TODO: 이미 오늘의 다짐을 작성했는지 확인하는 로직 추가
 
 	scrum := model.Scrum{
@@ -50,11 +49,15 @@ func CreateTodayScrumByUserId(db *sql.DB, userId, goal, commitment, feelReason s
 		CreatedAt: util.GetTodayInKST(),
 	}
 
-	_, err := repository.InsertScrum(db, scrum)
+	_, err := repository.InsertScrum(scrum)
 	if err != nil {
 		log.Println("Error inserting scrum data:", err)
 		return "에러가 발생했습니다."
 	}
 
 	return "오늘의 다짐을 작성했습니다!"
+}
+
+func init() {
+	repository.Initialize("configs/dayday.db")
 }
