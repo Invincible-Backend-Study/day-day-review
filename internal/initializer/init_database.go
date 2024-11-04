@@ -7,9 +7,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func InitDatabase() (*sql.DB, error) {
-	dbFile := "../configs/dayday.db"
-	db, err := sql.Open("sqlite3", dbFile)
+func InitDatabase(filePath string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", filePath)
 	if err != nil {
 		log.Fatalf("Database Connection fail: %v", err)
 		return nil, err

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"day-day-review/internal/handler"
 	"day-day-review/internal/initializer"
-	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -15,22 +14,25 @@ import (
 
 var (
 	token   string
-	db      *sql.DB
 	guildID string
+	db      *sql.DB
 	manager *handler.Manager
 )
 
 func init() {
-	flag.StringVar(&token, "t", "", "Bot token")
-	flag.StringVar(&guildID, "g", "", "Guild ID")
-	flag.Parse()
+	// Load Discord Config
+	discordConfig, err := initializer.LoadDiscordConfig("configs/discord.yml")
+	if err != nil {
+		log.Fatal("error loading discord config", err)
+	}
+	token = discordConfig.Token
+	guildID = discordConfig.Guild
 
-	var err error
-	db, err = initializer.InitDatabase()
+	// Initialize Database
+	db, err = initializer.InitDatabase("configs/dayday.db")
 	if err != nil {
 		log.Fatal("error initializing database", err)
 	}
-
 	manager = handler.NewHandlerManager(db, guildID)
 }
 
