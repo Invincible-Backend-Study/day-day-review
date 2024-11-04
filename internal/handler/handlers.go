@@ -46,7 +46,19 @@ func handleApplicationCommand(session *discordgo.Session, interaction *discordgo
 			log.Printf("Error responding with modal: %v", err)
 		}
 	case commandRegisterTodayScrum:
-		err := session.InteractionRespond(interaction.Interaction, createRegisterScrumModal())
+		userId := interaction.Member.User.ID
+		todayScrumExists, err := service.ExistTodayScrum(userId)
+		if err != nil {
+			log.Println("Error select today scrum: ", err)
+			sendEphemeralMessage(session, interaction, fmt.Sprint("%w", err))
+			return
+		}
+		if todayScrumExists {
+			sendEphemeralMessage(session, interaction, "오늘의 다짐을 이미 작성하셨습니다.")
+			return
+		}
+
+		err = session.InteractionRespond(interaction.Interaction, createRegisterScrumModal())
 		if err != nil {
 			log.Printf("Error responding with modal: %v", err)
 		}
@@ -148,7 +160,6 @@ func interactionRegisterScrumModal(session *discordgo.Session, interaction *disc
 		return
 	}
 
-	// log.Println(goal, commitment, feelScore, feelReason)
 	userId := interaction.Member.User.ID
 
 	response := service.CreateTodayScrum(userId, goal, commitment, feelReason, feelScore)

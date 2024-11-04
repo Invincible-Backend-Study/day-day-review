@@ -58,6 +58,17 @@ func CreateTodayScrum(userId, goal, commitment, feelReason string, feelScore int
 	return "오늘의 다짐을 작성했습니다!"
 }
 
+// ExistTodayScrum 주어진 사용자가 오늘의 다짐을 작성했는지 여부를 반환합니다.
+func ExistTodayScrum(userId string) (bool, error) {
+	today := util.GetTodayInKST()
+	result, err := repository.ExistScrumByUserId(userId, today)
+	if err != nil {
+		log.Printf("Error select scrum data: %v - %s", err, userId)
+		return false, fmt.Errorf("failed to select scrum data: %w", err)
+	}
+	return result, nil
+}
+
 func init() {
 	repository.Initialize("configs/dayday.db")
 }
