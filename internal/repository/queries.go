@@ -18,6 +18,7 @@ const (
 		PRIMARY KEY (user_id, created_at)
 	);
 	`
-	insertUserQuery  = `INSERT INTO User (name, discord_user_id) VALUES (?, ?)`
-	insertScrumQuery = `INSERT INTO Scrum (user_id, goal, commitment, feel_score, feel_reason, created_at) VALUES (?, ?, ?, ?, ?, ?)`
+	insertUserQuery  = `INSERT INTO user (name, discord_user_id) VALUES (?, ?)`
+	insertScrumQuery = `INSERT INTO scrum (user_id, goal, commitment, feel_score, feel_reason, created_at) VALUES (?, ?, ?, ?, ?, ?)`
+	existScrumQuery  = `SELECT COUNT(user_id) FROM scrum WHERE user_id = ? and created_at = ?`
 )

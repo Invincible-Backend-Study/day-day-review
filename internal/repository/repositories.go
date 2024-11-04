@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 )
 
 var (
@@ -69,4 +70,24 @@ func InsertScrum(scrum model.Scrum) (*model.Scrum, error) {
 		return nil, fmt.Errorf("failed to execute statement: %w", err)
 	}
 	return &scrum, nil
+}
+
+func ExistScrumByUserId(userId string, today time.Time) (bool, error) {
+	stmt, err := database.Prepare(existScrumQuery)
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			log.Println("failed to close statement:", err)
+		}
+	}(stmt)
+	var count int
+	err = stmt.QueryRow(userId, today).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute statement: %w", err)
+	}
+	log.Printf("count: %d", count)
+	return count > 0, nil
 }
