@@ -18,7 +18,8 @@ const (
 		PRIMARY KEY (user_id, created_at)
 	);
 	`
-	insertUserQuery  = `INSERT INTO user (name, discord_user_id) VALUES (?, ?)`
-	insertScrumQuery = `INSERT INTO scrum (user_id, goal, commitment, feel_score, feel_reason, created_at) VALUES (?, ?, ?, ?, ?, ?)`
-	existScrumQuery  = `SELECT COUNT(user_id) FROM scrum WHERE user_id = ? and created_at = ?`
+	insertUserQuery       = `INSERT INTO user (name, discord_user_id) VALUES (?, ?)`
+	insertScrumQuery      = `INSERT INTO scrum (user_id, goal, commitment, feel_score, feel_reason, created_at) VALUES (?, ?, ?, ?, ?, ?)`
+	existScrumQuery       = `SELECT COUNT(user_id) FROM scrum WHERE user_id = ? and created_at = ?`
+	selectTodayScrumQuery = `SELECT u.name, goal, commitment, feel_score, feel_reason FROM scrum as s JOIN user as u ON s.user_id = u.discord_user_id WHERE created_at = ?`
 )

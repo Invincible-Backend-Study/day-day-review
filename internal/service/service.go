@@ -69,6 +69,14 @@ func ExistTodayScrum(userId string) (bool, error) {
 	return result, nil
 }
 
+func GetTodayScrums() ([]model.ScrumDto, error) {
+	scrums, err := repository.SelectTodayScrumList(util.GetTodayInKST())
+	if err != nil {
+		return nil, err
+	}
+	return scrums, nil
+}
+
 func init() {
 	repository.Initialize("configs/dayday.db")
 }
