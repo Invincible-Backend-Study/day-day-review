@@ -34,7 +34,7 @@ func InitDatabase() (*sql.DB, error) {
 	`
 	_, err = db.Exec(createTableQuery)
 	if err != nil {
-		log.Fatalln("Table Creation fail: ", err)
+		log.Println("Table Creation fail: ", err)
 		return nil, err
 	}
 
