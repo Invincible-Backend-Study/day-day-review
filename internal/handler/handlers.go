@@ -20,23 +20,13 @@ func SetGuildId(id string) {
 	guildId = id
 }
 
-// RegisterCommands 봇에 명령어를 등록합니다. 명령어는 commands.go에 정의되어 있습니다.
-func RegisterCommands(s *discordgo.Session, _ *discordgo.Ready) {
-	for _, cmd := range commands {
-		_, err := s.ApplicationCommandCreate(s.State.User.ID, guildId, cmd)
-		if err != nil {
-			log.Printf("Cannot create command: %v\n", err)
-		}
-	}
-}
-
-// RegisterInteractions 봇의 상호작용을 처리합니다.
-func RegisterInteractions(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
-	switch interaction.Type {
-	case discordgo.InteractionApplicationCommand:
-		handleApplicationCommand(session, interaction)
-	case discordgo.InteractionModalSubmit:
-		handleModalSubmit(session, interaction)
+// handleModalSubmit 모달의 제출을 처리합니다.
+func handleModalSubmit(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	switch interaction.ModalSubmitData().CustomID {
+	case cIdRegisterUserModal:
+		interactionRegisterUserModal(session, interaction)
+	case cIdRegisterScrumModal:
+		interactionRegisterScrumModal(session, interaction)
 	}
 }
 
@@ -44,38 +34,47 @@ func RegisterInteractions(session *discordgo.Session, interaction *discordgo.Int
 func handleApplicationCommand(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	switch interaction.ApplicationCommandData().Name {
 	case commandRegisterUser:
-		err := session.InteractionRespond(interaction.Interaction, createRegisterUserModal())
-		if err != nil {
-			log.Printf("Error responding with modal: %v", err)
-		}
+		registerUser(session, interaction)
 	case commandRegisterTodayScrum:
-		userId := interaction.Member.User.ID
-		todayScrumExists, err := service.ExistTodayScrum(userId)
-		if err != nil {
-			log.Println("Error select today scrum: ", err)
-			sendEphemeralMessage(session, interaction, fmt.Sprint("%w", err))
-			return
-		}
-		if todayScrumExists {
-			sendEphemeralMessage(session, interaction, "오늘의 다짐을 이미 작성하셨습니다.")
-			return
-		}
-
-		err = session.InteractionRespond(interaction.Interaction, createRegisterScrumModal())
-		if err != nil {
-			log.Printf("Error responding with modal: %v", err)
-		}
+		registerTodayScrum(session, interaction)
 	case commandGetTodayScrums:
-		scrums, err := service.GetTodayScrums()
-		if err != nil {
-			log.Println("Error select today scrums: ", err)
-			sendEphemeralMessage(session, interaction, fmt.Sprint("%w", err))
-			return
-		}
-		sendMessage(session, interaction, scrumsToString(scrums))
+		getTodayScrums(session, interaction)
 	}
 }
 
+func getTodayScrums(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	scrums, err := service.GetTodayScrums()
+	if err != nil {
+		log.Println("Error select today scrums: ", err)
+		sendEphemeralMessage(session, interaction, fmt.Sprint("%w", err))
+	}
+	sendMessage(session, interaction, scrumsToString(scrums))
+}
+
+func registerUser(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	err := session.InteractionRespond(interaction.Interaction, createRegisterUserModal())
+	if err != nil {
+		log.Printf("Error responding with modal: %v", err)
+	}
+}
+
+func registerTodayScrum(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	userId := interaction.Member.User.ID
+	todayScrumExists, err := service.ExistTodayScrum(userId)
+	if err != nil {
+		log.Println("Error select today scrum: ", err)
+		sendEphemeralMessage(session, interaction, fmt.Sprint("%w", err))
+	}
+	if todayScrumExists {
+		sendEphemeralMessage(session, interaction, "오늘의 다짐을 이미 작성하셨습니다.")
+	}
+	err = session.InteractionRespond(interaction.Interaction, createRegisterScrumModal())
+	if err != nil {
+		log.Printf("Error responding with modal: %v", err)
+	}
+}
+
+// TODO: 이거 분리해야합니당.
 // scrumsToString scrum 목록을 문자열로 변환합니다.
 func scrumsToString(scrums []model.ScrumDto) string {
 	var result strings.Builder
@@ -85,16 +84,6 @@ func scrumsToString(scrums []model.ScrumDto) string {
 			scrum.Name, scrum.Goal, scrum.Commitment, scrum.FeelScore, scrum.FeelReason))
 	}
 	return result.String()
-}
-
-// handleModalSubmit 모달의 제출을 처리합니다.
-func handleModalSubmit(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
-	switch interaction.ModalSubmitData().CustomID {
-	case cIdRegisterUserModal:
-		interactionRegisterUserModal(session, interaction)
-	case cIdRegisterScrumModal:
-		interactionRegisterScrumModal(session, interaction)
-	}
 }
 
 // extractValueFromComponent 컴포넌트에서 값을 추출합니다.
