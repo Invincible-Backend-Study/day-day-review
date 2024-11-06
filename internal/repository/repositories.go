@@ -88,7 +88,6 @@ func ExistScrumByUserId(userId string, today time.Time) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to execute statement: %w", err)
 	}
-	log.Printf("count: %d", count)
 	return count > 0, nil
 }
 
