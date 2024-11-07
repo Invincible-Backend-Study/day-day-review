@@ -150,7 +150,7 @@ func ExistRetrospectiveByUserId(userId string, today time.Time) (bool, error) {
 	return count > 0, nil
 }
 
-func SelectTodayScrumList(today time.Time) ([]model.ScrumDto, error) {
+func SelectScrumListByDate(date time.Time) ([]model.ScrumDto, error) {
 	stmt, err := database.Prepare(selectTodayScrumQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
@@ -162,7 +162,7 @@ func SelectTodayScrumList(today time.Time) ([]model.ScrumDto, error) {
 		}
 	}(stmt)
 
-	rows, err := stmt.Query(today)
+	rows, err := stmt.Query(date)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
@@ -190,7 +190,7 @@ func SelectTodayScrumList(today time.Time) ([]model.ScrumDto, error) {
 	return scrums, nil
 }
 
-func SelectTodayRetrospectiveList(today time.Time) ([]model.RetrospectiveDto, error) {
+func SelectRetrospectiveListByDate(date time.Time) ([]model.RetrospectiveDto, error) {
 	stmt, err := database.Prepare(selectTodayRetrospectiveQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
@@ -202,7 +202,7 @@ func SelectTodayRetrospectiveList(today time.Time) ([]model.RetrospectiveDto, er
 		}
 	}(stmt)
 
-	rows, err := stmt.Query(today)
+	rows, err := stmt.Query(date)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
