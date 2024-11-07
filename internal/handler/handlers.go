@@ -86,20 +86,19 @@ func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 다짐 목록: \n", date.Format("2006-01-02")))
 	for _, scrum := range scrums {
-		builder.WriteString(fmt.Sprintf("\n###😁 %s\n", scrum.Name))
+		builder.WriteString(fmt.Sprintf("\n### 😁 %s\n", scrum.Name))
 
-		builder.WriteString("**오늘의 목표**\n")
+		builder.WriteString("> 오늘의 목표\n")
 		builder.WriteString(fmt.Sprintf("> %s\n\n", scrum.Goal))
 
-		builder.WriteString("**오늘의 다짐**\n")
-		builder.WriteString("> ")
+		builder.WriteString("> 오늘의 다짐\n")
 		builder.WriteString(strings.ReplaceAll(scrum.Commitment, "\n", "\n> "))
 		builder.WriteString("\n\n")
 
-		builder.WriteString("**기분 점수**: ")
-		builder.WriteString(fmt.Sprintf("%s\n", scrum.FeelScore))
+		builder.WriteString("> 기분 점수: ")
+		builder.WriteString(fmt.Sprintf("%d\n", scrum.FeelScore))
 
-		builder.WriteString("> 이유: ")
+		builder.WriteString("이유: ")
 		builder.WriteString(scrum.FeelReason)
 		builder.WriteString("\n")
 	}
@@ -184,25 +183,24 @@ func getScrumsByDate(session *discordgo.Session, interaction *discordgo.Interact
 	sendMessage(session, interaction, scrumsToString(date, scrums))
 }
 
-// retrospectiveToString scrum 목록을 문자열로 변환합니다.
+// retrospectiveToString 회고 목록을 문자열로 변환합니다.
 func retrospectiveToString(date time.Time, retrospectives []model.RetrospectiveDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 회고 목록: \n", date.Format("2006-01-02")))
 	for _, r := range retrospectives {
-		builder.WriteString(fmt.Sprintf("\n###😁 %s\n", r.Name))
+		builder.WriteString(fmt.Sprintf("\n### 😁 %s\n", r.Name))
 
-		builder.WriteString("**오늘의 목표**\n")
+		builder.WriteString("> 오늘의 목표\n")
 		builder.WriteString(fmt.Sprintf("> %s\n\n", r.GoalAchieved))
 
-		builder.WriteString("**배운 점**\n")
-		builder.WriteString("> ")
+		builder.WriteString("> 배운 점\n")
 		builder.WriteString(strings.ReplaceAll(r.Learned, "\n", "\n> "))
 		builder.WriteString("\n\n")
 
-		builder.WriteString("**기분 점수**: ")
-		builder.WriteString(fmt.Sprintf("%s\n", r.FeelScore))
+		builder.WriteString("> 기분 점수: ")
+		builder.WriteString(fmt.Sprintf("%d\n", r.FeelScore))
 
-		builder.WriteString("> 이유: ")
+		builder.WriteString("이유: ")
 		builder.WriteString(r.FeelReason)
 		builder.WriteString("\n")
 	}
