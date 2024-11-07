@@ -15,13 +15,16 @@ import (
 var (
 	guildId       string
 	modalHandlers = map[string]func(*discordgo.Session, *discordgo.InteractionCreate){
-		cIdRegisterUserModal:  interactionRegisterUserModal,
-		cIdRegisterScrumModal: interactionRegisterScrumModal,
+		cIdRegisterUserModal:          interactionRegisterUserModal,
+		cIdRegisterScrumModal:         interactionRegisterScrumModal,
+		cIdRegisterRetrospectionModal: interactionRegisterRetrospectiveModal,
 	}
 	commandHandlers = map[string]func(*discordgo.Session, *discordgo.InteractionCreate){
-		commandRegisterUser:       registerUser,
-		commandRegisterTodayScrum: registerTodayScrum,
-		commandGetTodayScrums:     getTodayScrums,
+		commandRegisterUser:               registerUser,
+		commandRegisterTodayScrum:         registerTodayScrum,
+		commandRegisterTodayRetrospection: registerTodayRetrospection,
+		commandGetTodayScrums:             getTodayScrums,
+		commandGetTodayRetrospectives:     getTodayRetrospectives,
 	}
 )
 
@@ -39,14 +42,6 @@ func handleApplicationCommand(session *discordgo.Session, interaction *discordgo
 	commandHandlers[interaction.ApplicationCommandData().Name](session, interaction)
 }
 
-func getTodayScrums(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
-	scrums, err := service.GetTodayScrums()
-	if err != nil {
-		logErrorAndSendMessage(session, interaction, "오늘의 다짐을 불러오는 중 오류가 발생했습니다.", err)
-	}
-	sendMessage(session, interaction, scrumsToString(scrums))
-}
-
 func registerUser(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	err := session.InteractionRespond(interaction.Interaction, createRegisterUserModal())
 	if err != nil {
@@ -56,9 +51,13 @@ func registerUser(session *discordgo.Session, interaction *discordgo.Interaction
 
 func registerTodayScrum(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	userId := interaction.Member.User.ID
+	if !service.ExistUser(userId) {
+		sendEphemeralMessage(session, interaction, "회원등록을 먼저 진행해주세요.")
+		return
+	}
 	todayScrumExists, err := service.ExistTodayScrum(userId)
 	if err != nil {
-		logErrorAndSendMessage(session, interaction, "오늘의 다짐을 등록하는 중 오류가 발생했습니다.", err)
+		logErrorAndSendMessage(session, interaction, "오늘의 다짐 작성 시 에러가 발생했습니다.", err)
 		return
 	}
 	if todayScrumExists {
@@ -71,6 +70,14 @@ func registerTodayScrum(session *discordgo.Session, interaction *discordgo.Inter
 	}
 }
 
+func getTodayScrums(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	scrums, err := service.GetTodayScrums()
+	if err != nil {
+		logErrorAndSendMessage(session, interaction, "오늘의 다짐을 불러오는 중 오류가 발생했습니다.", err)
+	}
+	sendMessage(session, interaction, scrumsToString(scrums))
+}
+
 // scrumsToString scrum 목록을 문자열로 변환합니다.
 func scrumsToString(scrums []model.ScrumDto) string {
 	var builder strings.Builder
@@ -78,6 +85,48 @@ func scrumsToString(scrums []model.ScrumDto) string {
 	for _, scrum := range scrums {
 		builder.WriteString(fmt.Sprintf("\n### %s\n```\n오늘의 목표: %s\n오늘의 다짐: %s\n기분 점수: %d\n이유: %s\n```",
 			scrum.Name, scrum.Goal, scrum.Commitment, scrum.FeelScore, scrum.FeelReason))
+	}
+	return builder.String()
+}
+
+func registerTodayRetrospection(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	userId := interaction.Member.User.ID
+	if !service.ExistUser(userId) {
+		sendEphemeralMessage(session, interaction, "회원등록을 먼저 진행해주세요.")
+		return
+	}
+
+	tr, err := service.ExistTodayRetrospective(userId)
+	if err != nil {
+		logErrorAndSendMessage(session, interaction, "오늘의 회고 등록 시 에러가 발생했습니다.", err)
+		return
+	}
+	if tr {
+		sendEphemeralMessage(session, interaction, "오늘의 회고를 이미 작성하셨습니다.")
+		return
+	}
+
+	err = session.InteractionRespond(interaction.Interaction, createRegisterRetrospectiveModal())
+	if err != nil {
+		log.Printf("Error responding with modal: %v", err)
+	}
+}
+
+func getTodayRetrospectives(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	retrospective, err := service.GetTodayRetrospectives()
+	if err != nil {
+		logErrorAndSendMessage(session, interaction, "오늘의 회고를 불러오는 중 오류가 발생했습니다.", err)
+	}
+	sendMessage(session, interaction, retrospectiveToString(retrospective))
+}
+
+// scrumsToString scrum 목록을 문자열로 변환합니다.
+func retrospectiveToString(scrums []model.RetrospectiveDto) string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 회고 목록: \n", util.GetTodayInKST().Format("2006-01-02")))
+	for _, scrum := range scrums {
+		builder.WriteString(fmt.Sprintf("\n### %s\n```\n오늘의 목표(달성 여부): %s\n배운 점: %s\n기분 점수: %d\n이유: %s\n```",
+			scrum.Name, scrum.GoalAchieved, scrum.Learned, scrum.FeelScore, scrum.FeelReason))
 	}
 	return builder.String()
 }
@@ -136,5 +185,33 @@ func interactionRegisterScrumModal(session *discordgo.Session, interaction *disc
 		return
 	}
 	response := service.CreateTodayScrum(interaction.Member.User.ID, data["goal"], data["commitment"], data["feelReason"], feelScore)
+	sendEphemeralMessage(session, interaction, response)
+}
+
+// interactionRegisterRetrospectiveModal 오늘의 회고 등록 모달의 상호작용을 처리합니다.
+func interactionRegisterRetrospectiveModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	inputs := map[string]string{
+		"goalAchieved": cIdRegisterRetrospectionGoalAchievedInput,
+		"learned":      cIdRegisterRetrospectionLearnedInput,
+		"feelScore":    cIdRegisterRetrospectionScoreInput,
+		"feelReason":   cIdRegisterRetrospectionReasonInput,
+	}
+	data := make(map[string]string)
+	for key, componentId := range inputs {
+		value, err := extractValueFromComponent(interaction.ModalSubmitData().Components, componentId)
+		if err != nil {
+			logErrorAndSendMessage(session, interaction, fmt.Sprintf("Error in %s input", key), err)
+			return
+		}
+		data[key] = value
+	}
+
+	feelScore, err := strconv.Atoi(data["feelScore"])
+	if err != nil || feelScore < 0 || feelScore > 10 {
+		logErrorAndSendMessage(session, interaction, "기분 점수가 올바르지 않습니다.", err)
+		return
+	}
+
+	response := service.CreateTodayRetrospectives(interaction.Member.User.ID, data["goalAchieved"], data["learned"], data["feelReason"], feelScore)
 	sendEphemeralMessage(session, interaction, response)
 }
