@@ -52,6 +52,26 @@ func InsertUser(user model.User) error {
 	return nil
 }
 
+func ExistUserByUserId(userId string) (bool, error) {
+	stmt, err := database.Prepare(existUserQuery)
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare statement: %v", err)
+	}
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			log.Println("failed to close statement:", err)
+		}
+	}(stmt)
+
+	var result int
+	err = stmt.QueryRow(userId).Scan(&result)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute statement: %v", err)
+	}
+	return result == 1, nil
+}
+
 func InsertScrum(scrum model.Scrum) (*model.Scrum, error) {
 	// Prepared statement 생성
 	stmt, err := database.Prepare(insertScrumQuery)
