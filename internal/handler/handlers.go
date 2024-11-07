@@ -93,7 +93,6 @@ func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
 
 		builder.WriteString("> 오늘의 다짐\n")
 		builder.WriteString(fmt.Sprintf("%s\n\n", scrum.Commitment))
-		builder.WriteString("\n\n")
 
 		builder.WriteString("> 기분 점수: ")
 		builder.WriteString(fmt.Sprintf("%d\n", scrum.FeelScore))
@@ -193,7 +192,6 @@ func retrospectiveToString(date time.Time, retrospectives []model.RetrospectiveD
 
 		builder.WriteString("> 배운 점\n")
 		builder.WriteString(fmt.Sprintf("%s\n\n", r.Learned))
-		builder.WriteString("\n\n")
 
 		builder.WriteString("> 기분 점수: ")
 		builder.WriteString(fmt.Sprintf("%d\n", r.FeelScore))
