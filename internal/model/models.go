@@ -17,7 +17,7 @@ type Scrum struct {
 	CreatedAt  time.Time
 }
 
-type Retrospection struct {
+type Retrospective struct {
 	UserId       string
 	GoalAchieved string
 	Learned      string

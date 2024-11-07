@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -27,4 +28,14 @@ func GetTodayInKST() time.Time {
 
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, kstLocation)
 	return today
+}
+
+func ParseDate(dateStr string) (time.Time, error) {
+	// 날짜 문자열을 KST 타임존으로 파싱
+	parsedTime, err := time.ParseInLocation("2006-01-02", strings.TrimSpace(dateStr), kstLocation)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return parsedTime, nil
 }
