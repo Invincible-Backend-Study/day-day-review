@@ -1,10 +1,8 @@
 package main
 
 import (
-	"database/sql"
 	"day-day-review/internal/handler"
-	"day-day-review/internal/intializer"
-	"flag"
+	"day-day-review/internal/initializer"
 	"log"
 	"os"
 	"os/signal"
@@ -14,24 +12,18 @@ import (
 )
 
 var (
-	token   string
-	db      *sql.DB
-	guildID string
-	manager *handler.Manager
+	token string
 )
 
 func init() {
-	flag.StringVar(&token, "t", "", "Bot token")
-	flag.StringVar(&guildID, "g", "", "Guild ID")
-	flag.Parse()
-
-	var err error
-	db, err = intializer.InitDatabase()
+	// Load Discord Config
+	discordConfig, err := initializer.LoadDiscordConfig("configs/discord.yml")
 	if err != nil {
-		log.Fatal("error initializing database", err)
+		log.Fatal("error loading discord config", err)
 	}
+	token = discordConfig.Token
 
-	manager = handler.NewHandlerManager(db, guildID)
+	handler.SetGuildId(discordConfig.Guild)
 }
 
 func main() {
@@ -43,8 +35,8 @@ func main() {
 	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMessageReactions | discordgo.IntentsGuilds
 
 	discord.AddHandler(handler.EasterEggHandler)
-	discord.AddHandler(manager.RegisterCommands)
-	discord.AddHandler(manager.RegisterHandleInteraction)
+	discord.AddHandler(handler.RegisterCommands)
+	discord.AddHandler(handler.RegisterInteractions)
 
 	err = discord.Open()
 	if err != nil {

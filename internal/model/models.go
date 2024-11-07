@@ -10,15 +10,15 @@ type FeelScore struct {
 }
 
 type Scrum struct {
-	UserId     int64
+	UserId     string
 	Goal       string
 	Commitment string
 	Feels      FeelScore
 	CreatedAt  time.Time
 }
 
-type Retrospection struct {
-	UserId       int64
+type Retrospective struct {
+	UserId       string
 	GoalAchieved string
 	Learned      string
 	Feels        FeelScore
@@ -26,7 +26,6 @@ type Retrospection struct {
 }
 
 type User struct {
-	UserId        int64
-	Name          string
 	DiscordUserId string
+	Name          string
 }
