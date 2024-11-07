@@ -9,6 +9,8 @@ const (
 	commandGetTodayScrums             = "오늘-다짐-보기"
 	commandRegisterTodayRetrospection = "오늘-회고"
 	commandGetTodayRetrospectives     = "오늘-회고-보기"
+	commandGetScrumByDate             = "다짐-보기"
+	commandGetRetrospectionByDate     = "회고-보기"
 )
 
 const (
@@ -49,5 +51,29 @@ var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        commandGetTodayRetrospectives,
 		Description: "오늘의 회고를 모두 보여줍니다.",
+	},
+	{
+		Name:        commandGetScrumByDate,
+		Description: "특정 날짜의 다짐을 보여줍니다.",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "date",
+				Description: "보고 싶은 날짜를 입력해주세요. (YYYY-MM-DD)",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        commandGetRetrospectionByDate,
+		Description: "특정 날짜의 회고를 보여줍니다.",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "date",
+				Description: "보고 싶은 날짜를 입력해주세요. (YYYY-MM-DD)",
+				Required:    true,
+			},
+		},
 	},
 }
