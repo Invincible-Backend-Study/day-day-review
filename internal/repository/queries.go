@@ -8,14 +8,15 @@ const (
 	);
 
 	CREATE TABLE IF NOT EXISTS scrum (
-		user_id INTEGER NOT NULL,
+		user_id CHAR(30) NOT NULL,
 		goal TEXT NOT NULL,
 		commitment TEXT,
 		feel_score INTEGER,
 		feel_reason TEXT,
 		created_at TIMESTAMP DEFAULT (datetime('now', '+09:00')),
 		
-		PRIMARY KEY (user_id, created_at)
+		PRIMARY KEY (user_id, created_at),
+		FOREIGN KEY (user_id) REFERENCES user(discord_user_id)
 	);
 	`
 	insertUserQuery       = `INSERT INTO user (name, discord_user_id) VALUES (?, ?)`
