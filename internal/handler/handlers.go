@@ -86,8 +86,18 @@ func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 다짐 목록: \n", date.Format("2006-01-02")))
 	for _, scrum := range scrums {
-		builder.WriteString(fmt.Sprintf("\n### %s\n```\n오늘의 목표: %s\n오늘의 다짐: %s\n기분 점수: %d\n이유: %s\n```",
-			scrum.Name, scrum.Goal, scrum.Commitment, scrum.FeelScore, scrum.FeelReason))
+		builder.WriteString(fmt.Sprintf("\n### 😁 %s\n", scrum.Name))
+
+		builder.WriteString("> 오늘의 목표\n")
+		builder.WriteString(fmt.Sprintf("%s\n\n", scrum.Goal))
+
+		builder.WriteString("> 오늘의 다짐\n")
+		builder.WriteString(fmt.Sprintf("%s\n\n", scrum.Commitment))
+
+		builder.WriteString("> 기분 점수: ")
+		builder.WriteString(fmt.Sprintf("%d\n", scrum.FeelScore))
+		builder.WriteString(scrum.FeelReason)
+		builder.WriteString("\n")
 	}
 	return builder.String()
 }
@@ -170,13 +180,23 @@ func getScrumsByDate(session *discordgo.Session, interaction *discordgo.Interact
 	sendMessage(session, interaction, scrumsToString(date, scrums))
 }
 
-// scrumsToString scrum 목록을 문자열로 변환합니다.
-func retrospectiveToString(date time.Time, scrums []model.RetrospectiveDto) string {
+// retrospectiveToString 회고 목록을 문자열로 변환합니다.
+func retrospectiveToString(date time.Time, retrospectives []model.RetrospectiveDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 회고 목록: \n", date.Format("2006-01-02")))
-	for _, scrum := range scrums {
-		builder.WriteString(fmt.Sprintf("\n### %s\n```\n오늘의 목표(달성 여부): %s\n배운 점: %s\n기분 점수: %d\n이유: %s\n```",
-			scrum.Name, scrum.GoalAchieved, scrum.Learned, scrum.FeelScore, scrum.FeelReason))
+	for _, r := range retrospectives {
+		builder.WriteString(fmt.Sprintf("\n### 😁 %s\n", r.Name))
+
+		builder.WriteString("> 오늘의 목표\n")
+		builder.WriteString(fmt.Sprintf("%s\n\n", r.GoalAchieved))
+
+		builder.WriteString("> 배운 점\n")
+		builder.WriteString(fmt.Sprintf("%s\n\n", r.Learned))
+
+		builder.WriteString("> 기분 점수: ")
+		builder.WriteString(fmt.Sprintf("%d\n", r.FeelScore))
+		builder.WriteString(r.FeelReason)
+		builder.WriteString("\n")
 	}
 	return builder.String()
 }
