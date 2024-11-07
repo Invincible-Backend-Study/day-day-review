@@ -8,6 +8,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -25,6 +26,8 @@ var (
 		commandRegisterTodayRetrospection: registerTodayRetrospection,
 		commandGetTodayScrums:             getTodayScrums,
 		commandGetTodayRetrospectives:     getTodayRetrospectives,
+		commandGetScrumByDate:             getScrumsByDate,
+		commandGetRetrospectionByDate:     getRetrospectivesByDate,
 	}
 )
 
@@ -75,13 +78,13 @@ func getTodayScrums(session *discordgo.Session, interaction *discordgo.Interacti
 	if err != nil {
 		logErrorAndSendMessage(session, interaction, "오늘의 다짐을 불러오는 중 오류가 발생했습니다.", err)
 	}
-	sendMessage(session, interaction, scrumsToString(scrums))
+	sendMessage(session, interaction, scrumsToString(util.GetTodayInKST(), scrums))
 }
 
 // scrumsToString scrum 목록을 문자열로 변환합니다.
-func scrumsToString(scrums []model.ScrumDto) string {
+func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 다짐 목록: \n", util.GetTodayInKST().Format("2006-01-02")))
+	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 다짐 목록: \n", date.Format("2006-01-02")))
 	for _, scrum := range scrums {
 		builder.WriteString(fmt.Sprintf("\n### %s\n```\n오늘의 목표: %s\n오늘의 다짐: %s\n기분 점수: %d\n이유: %s\n```",
 			scrum.Name, scrum.Goal, scrum.Commitment, scrum.FeelScore, scrum.FeelReason))
@@ -117,13 +120,60 @@ func getTodayRetrospectives(session *discordgo.Session, interaction *discordgo.I
 	if err != nil {
 		logErrorAndSendMessage(session, interaction, "오늘의 회고를 불러오는 중 오류가 발생했습니다.", err)
 	}
-	sendMessage(session, interaction, retrospectiveToString(retrospective))
+	sendMessage(session, interaction, retrospectiveToString(util.GetTodayInKST(), retrospective))
+}
+
+func getRetrospectivesByDate(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	dateStr := interaction.ApplicationCommandData().Options[0].StringValue()
+	date, err := util.ParseDate(dateStr)
+	log.Println("Received date:", date)
+	if err != nil {
+		err := session.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "잘못된 날짜 형식입니다. 형식은 YYYY-MM-DD이어야 합니다.",
+			},
+		})
+		if err != nil {
+			log.Printf("Error responding with message: %v", err)
+		}
+		return
+	}
+
+	retrospective, err := service.GetRetrospectivesByDate(date)
+	if err != nil {
+		logErrorAndSendMessage(session, interaction, "회고를 불러오는 중 오류가 발생했습니다.", err)
+	}
+	sendMessage(session, interaction, retrospectiveToString(date, retrospective))
+}
+
+func getScrumsByDate(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	dateStr := interaction.ApplicationCommandData().Options[0].StringValue()
+	date, err := util.ParseDate(dateStr)
+	if err != nil {
+		err := session.InteractionRespond(interaction.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "잘못된 날짜 형식입니다. 형식은 YYYY-MM-DD이어야 합니다.",
+			},
+		})
+		if err != nil {
+			log.Printf("Error responding with message: %v", err)
+		}
+		return
+	}
+
+	scrums, err := service.GetScrumsByDate(date)
+	if err != nil {
+		logErrorAndSendMessage(session, interaction, "다짐을 불러오는 중 오류가 발생했습니다.", err)
+	}
+	sendMessage(session, interaction, scrumsToString(date, scrums))
 }
 
 // scrumsToString scrum 목록을 문자열로 변환합니다.
-func retrospectiveToString(scrums []model.RetrospectiveDto) string {
+func retrospectiveToString(date time.Time, scrums []model.RetrospectiveDto) string {
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 회고 목록: \n", util.GetTodayInKST().Format("2006-01-02")))
+	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 회고 목록: \n", date.Format("2006-01-02")))
 	for _, scrum := range scrums {
 		builder.WriteString(fmt.Sprintf("\n### %s\n```\n오늘의 목표(달성 여부): %s\n배운 점: %s\n기분 점수: %d\n이유: %s\n```",
 			scrum.Name, scrum.GoalAchieved, scrum.Learned, scrum.FeelScore, scrum.FeelReason))
