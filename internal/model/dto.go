@@ -7,3 +7,11 @@ type ScrumDto struct {
 	FeelScore  int
 	FeelReason string
 }
+
+type RetrospectiveDto struct {
+	Name         string
+	GoalAchieved string
+	Learned      string
+	FeelScore    int
+	FeelReason   string
+}
