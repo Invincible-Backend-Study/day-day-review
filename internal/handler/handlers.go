@@ -89,16 +89,14 @@ func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
 		builder.WriteString(fmt.Sprintf("\n### 😁 %s\n", scrum.Name))
 
 		builder.WriteString("> 오늘의 목표\n")
-		builder.WriteString(fmt.Sprintf("> %s\n\n", scrum.Goal))
+		builder.WriteString(fmt.Sprintf("%s\n\n", scrum.Goal))
 
 		builder.WriteString("> 오늘의 다짐\n")
-		builder.WriteString(strings.ReplaceAll(scrum.Commitment, "\n", "\n> "))
+		builder.WriteString(fmt.Sprintf("%s\n\n", scrum.Commitment))
 		builder.WriteString("\n\n")
 
 		builder.WriteString("> 기분 점수: ")
 		builder.WriteString(fmt.Sprintf("%d\n", scrum.FeelScore))
-
-		builder.WriteString("이유: ")
 		builder.WriteString(scrum.FeelReason)
 		builder.WriteString("\n")
 	}
@@ -191,16 +189,14 @@ func retrospectiveToString(date time.Time, retrospectives []model.RetrospectiveD
 		builder.WriteString(fmt.Sprintf("\n### 😁 %s\n", r.Name))
 
 		builder.WriteString("> 오늘의 목표\n")
-		builder.WriteString(fmt.Sprintf("> %s\n\n", r.GoalAchieved))
+		builder.WriteString(fmt.Sprintf("%s\n\n", r.GoalAchieved))
 
 		builder.WriteString("> 배운 점\n")
-		builder.WriteString(strings.ReplaceAll(r.Learned, "\n", "\n> "))
+		builder.WriteString(fmt.Sprintf("%s\n\n", r.Learned))
 		builder.WriteString("\n\n")
 
 		builder.WriteString("> 기분 점수: ")
 		builder.WriteString(fmt.Sprintf("%d\n", r.FeelScore))
-
-		builder.WriteString("이유: ")
 		builder.WriteString(r.FeelReason)
 		builder.WriteString("\n")
 	}
