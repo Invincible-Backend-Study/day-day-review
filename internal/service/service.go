@@ -72,7 +72,7 @@ func CreateTodayScrum(userId, goal, commitment, feelReason string, feelScore int
 
 // CreateTodayRetrospectives 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
 func CreateTodayRetrospectives(userId, goalAchieved, learned, feelReason string, feelScore int) string {
-	retrospection := model.Retrospective{
+	retrospective := model.Retrospective{
 		UserId:       userId,
 		GoalAchieved: goalAchieved,
 		Learned:      learned,
@@ -83,7 +83,7 @@ func CreateTodayRetrospectives(userId, goalAchieved, learned, feelReason string,
 		CreatedAt: util.GetTodayInKST(),
 	}
 
-	_, err := repository.InsertRetrospective(retrospection)
+	_, err := repository.InsertRetrospective(retrospective)
 	if err != nil {
 		log.Println("Error inserting Retrospectives data:", err)
 		return "에러가 발생했습니다."
