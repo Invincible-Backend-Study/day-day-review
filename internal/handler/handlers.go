@@ -82,7 +82,7 @@ func getTodayScrums(session *discordgo.Session, interaction *discordgo.Interacti
 }
 
 // scrumsToString scrum 목록을 문자열로 변환합니다.
-func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
+func scrumsToString(date time.Time, scrums []*model.ScrumDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 다짐 목록: \n", date.Format("2006-01-02")))
 	for _, scrum := range scrums {
@@ -181,7 +181,7 @@ func getScrumsByDate(session *discordgo.Session, interaction *discordgo.Interact
 }
 
 // retrospectiveToString 회고 목록을 문자열로 변환합니다.
-func retrospectiveToString(date time.Time, retrospectives []model.RetrospectiveDto) string {
+func retrospectiveToString(date time.Time, retrospectives []*model.RetrospectiveDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 회고 목록: \n", date.Format("2006-01-02")))
 	for _, r := range retrospectives {
