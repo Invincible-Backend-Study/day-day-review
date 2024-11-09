@@ -12,6 +12,7 @@ type DiscordConfig struct {
 	Guild string `yaml:"guild"`
 }
 
+// LoadDiscordConfig discord.yaml 파일을 읽어와 DiscordConfig 구조체에 저장
 func LoadDiscordConfig(filePath string) (*DiscordConfig, error) {
 	content, err := util.LoadFile(filePath)
 	if err != nil {

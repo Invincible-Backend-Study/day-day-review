@@ -37,6 +37,7 @@ func ParseDate(dateStr string) (time.Time, error) {
 	return parsedTime, nil
 }
 
+// LoadFile 파일을 읽어와 바이트 배열로 반환
 func LoadFile(filePath string) ([]byte, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
