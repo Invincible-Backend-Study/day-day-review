@@ -61,7 +61,7 @@ func CreateTodayScrum(userId, goal, commitment, feelReason string, feelScore int
 		CreatedAt: util.GetTodayInKST(),
 	}
 
-	_, err := repository.InsertScrum(scrum)
+	_, err := repository.InsertScrum(&scrum)
 	if err != nil {
 		log.Println("Error inserting scrum data:", err)
 		return "에러가 발생했습니다."
@@ -72,7 +72,7 @@ func CreateTodayScrum(userId, goal, commitment, feelReason string, feelScore int
 
 // CreateTodayRetrospectives 주어진 내용들로 사용자의 오늘의 다짐 레코드를 데이터베이스에 추가합니다.
 func CreateTodayRetrospectives(userId, goalAchieved, learned, feelReason string, feelScore int) string {
-	retrospection := model.Retrospective{
+	retrospective := model.Retrospective{
 		UserId:       userId,
 		GoalAchieved: goalAchieved,
 		Learned:      learned,
@@ -83,7 +83,7 @@ func CreateTodayRetrospectives(userId, goalAchieved, learned, feelReason string,
 		CreatedAt: util.GetTodayInKST(),
 	}
 
-	_, err := repository.InsertRetrospective(retrospection)
+	_, err := repository.InsertRetrospective(&retrospective)
 	if err != nil {
 		log.Println("Error inserting Retrospectives data:", err)
 		return "에러가 발생했습니다."
@@ -115,7 +115,7 @@ func ExistTodayRetrospective(userId string) (bool, error) {
 }
 
 // GetTodayScrums 작성된 오늘의 다짐을 모두 반환합니다.
-func GetTodayScrums() ([]model.ScrumDto, error) {
+func GetTodayScrums() ([]*model.ScrumDto, error) {
 	scrums, err := repository.SelectScrumListByDate(util.GetTodayInKST())
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func GetTodayScrums() ([]model.ScrumDto, error) {
 }
 
 // GetTodayRetrospectives 작성된 오늘의 회고를 모두 반환합니다.
-func GetTodayRetrospectives() ([]model.RetrospectiveDto, error) {
+func GetTodayRetrospectives() ([]*model.RetrospectiveDto, error) {
 	scrums, err := repository.SelectRetrospectiveListByDate(util.GetTodayInKST())
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func GetTodayRetrospectives() ([]model.RetrospectiveDto, error) {
 }
 
 // GetScrumsByDate 작성된 특정 날짜의 다짐을 모두 반환합니다.
-func GetScrumsByDate(date time.Time) ([]model.ScrumDto, error) {
+func GetScrumsByDate(date time.Time) ([]*model.ScrumDto, error) {
 	scrums, err := repository.SelectScrumListByDate(date)
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func GetScrumsByDate(date time.Time) ([]model.ScrumDto, error) {
 }
 
 // GetRetrospectivesByDate 작성된 특정 날짜의 회고를 모두 반환합니다.
-func GetRetrospectivesByDate(date time.Time) ([]model.RetrospectiveDto, error) {
+func GetRetrospectivesByDate(date time.Time) ([]*model.RetrospectiveDto, error) {
 	scrums, err := repository.SelectRetrospectiveListByDate(date)
 	if err != nil {
 		return nil, err

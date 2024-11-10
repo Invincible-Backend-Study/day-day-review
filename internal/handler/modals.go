@@ -90,13 +90,13 @@ func createRegisterRetrospectiveModal() *discordgo.InteractionResponse {
 		Type: discordgo.InteractionResponseModal,
 		Data: &discordgo.InteractionResponseData{
 			Title:    "회고 기록 입력",
-			CustomID: cIdRegisterRetrospectionModal,
+			CustomID: cIdRegisterRetrospectiveModal,
 			Components: []discordgo.MessageComponent{
 				// Goal 입력 필드
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.TextInput{
-							CustomID:    cIdRegisterRetrospectionGoalAchievedInput,
+							CustomID:    cIdRegisterRetrospectiveGoalAchievedInput,
 							Label:       "오늘의 목표 달성 여부를 입력하세요",
 							Style:       discordgo.TextInputParagraph,
 							Placeholder: "오늘의 목표 달성 여부",
@@ -108,7 +108,7 @@ func createRegisterRetrospectiveModal() *discordgo.InteractionResponse {
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.TextInput{
-							CustomID:    cIdRegisterRetrospectionLearnedInput,
+							CustomID:    cIdRegisterRetrospectiveLearnedInput,
 							Label:       "오늘의 배운점을 입력하세요",
 							Style:       discordgo.TextInputParagraph,
 							Placeholder: "오늘의 배운점",
@@ -120,7 +120,7 @@ func createRegisterRetrospectiveModal() *discordgo.InteractionResponse {
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.TextInput{
-							CustomID:    cIdRegisterRetrospectionScoreInput,
+							CustomID:    cIdRegisterRetrospectiveScoreInput,
 							Label:       "오늘의 기분 점수를 입력하세요 (숫자 0 ~ 10)",
 							Style:       discordgo.TextInputShort,
 							Placeholder: "기분 점수 (예: 7)",
@@ -132,7 +132,7 @@ func createRegisterRetrospectiveModal() *discordgo.InteractionResponse {
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.TextInput{
-							CustomID:    cIdRegisterRetrospectionReasonInput,
+							CustomID:    cIdRegisterRetrospectiveReasonInput,
 							Label:       "기분 점수의 이유를 입력하세요",
 							Style:       discordgo.TextInputParagraph,
 							Placeholder: "점수의 이유",
