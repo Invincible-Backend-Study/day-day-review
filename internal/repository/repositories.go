@@ -72,7 +72,7 @@ func ExistUserByUserId(userId string) (bool, error) {
 	return result == 1, nil
 }
 
-func InsertScrum(scrum model.Scrum) (*model.Scrum, error) {
+func InsertScrum(scrum *model.Scrum) (*model.Scrum, error) {
 	// Prepared statement 생성
 	stmt, err := database.Prepare(insertScrumQuery)
 	if err != nil {
@@ -89,10 +89,10 @@ func InsertScrum(scrum model.Scrum) (*model.Scrum, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute statement: %w", err)
 	}
-	return &scrum, nil
+	return scrum, nil
 }
 
-func InsertRetrospective(retrospective model.Retrospective) (*model.Retrospective, error) {
+func InsertRetrospective(retrospective *model.Retrospective) (*model.Retrospective, error) {
 	// Prepared statement 생성
 	stmt, err := database.Prepare(insertRetrospectiveQuery)
 	if err != nil {
@@ -109,7 +109,7 @@ func InsertRetrospective(retrospective model.Retrospective) (*model.Retrospectiv
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute statement: %w", err)
 	}
-	return &retrospective, nil
+	return retrospective, nil
 }
 
 func ExistScrumByUserId(userId string, today time.Time) (bool, error) {
@@ -150,7 +150,7 @@ func ExistRetrospectiveByUserId(userId string, today time.Time) (bool, error) {
 	return count > 0, nil
 }
 
-func SelectScrumListByDate(date time.Time) ([]model.ScrumDto, error) {
+func SelectScrumListByDate(date time.Time) ([]*model.ScrumDto, error) {
 	stmt, err := database.Prepare(selectTodayScrumQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
@@ -173,14 +173,14 @@ func SelectScrumListByDate(date time.Time) ([]model.ScrumDto, error) {
 		}
 	}(rows)
 
-	var scrums []model.ScrumDto
+	var scrums []*model.ScrumDto
 	for rows.Next() {
 		var scrum model.ScrumDto
 		err := rows.Scan(&scrum.Name, &scrum.Goal, &scrum.Commitment, &scrum.FeelScore, &scrum.FeelReason)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
-		scrums = append(scrums, scrum)
+		scrums = append(scrums, &scrum)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -190,7 +190,7 @@ func SelectScrumListByDate(date time.Time) ([]model.ScrumDto, error) {
 	return scrums, nil
 }
 
-func SelectRetrospectiveListByDate(date time.Time) ([]model.RetrospectiveDto, error) {
+func SelectRetrospectiveListByDate(date time.Time) ([]*model.RetrospectiveDto, error) {
 	stmt, err := database.Prepare(selectTodayRetrospectiveQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
@@ -213,14 +213,14 @@ func SelectRetrospectiveListByDate(date time.Time) ([]model.RetrospectiveDto, er
 		}
 	}(rows)
 
-	var scrums []model.RetrospectiveDto
+	var scrums []*model.RetrospectiveDto
 	for rows.Next() {
 		var scrum model.RetrospectiveDto
 		err := rows.Scan(&scrum.Name, &scrum.GoalAchieved, &scrum.Learned, &scrum.FeelScore, &scrum.FeelReason)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
-		scrums = append(scrums, scrum)
+		scrums = append(scrums, &scrum)
 	}
 
 	if err = rows.Err(); err != nil {

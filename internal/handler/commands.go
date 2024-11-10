@@ -7,10 +7,10 @@ const (
 	commandRegisterUser               = "회원-등록"
 	commandRegisterTodayScrum         = "오늘-다짐"
 	commandGetTodayScrums             = "오늘-다짐-보기"
-	commandRegisterTodayRetrospection = "오늘-회고"
+	commandRegisterTodayRetrospective = "오늘-회고"
 	commandGetTodayRetrospectives     = "오늘-회고-보기"
 	commandGetScrumByDate             = "다짐-보기"
-	commandGetRetrospectionByDate     = "회고-보기"
+	commandGetRetrospectivesByDate    = "회고-보기"
 )
 
 const (
@@ -23,11 +23,11 @@ const (
 	cIdRegisterScrumScoreInput      = "scrum_score_input"
 	cIdRegisterScrumReasonInput     = "scrum_reason_input"
 
-	cIdRegisterRetrospectionModal             = "retrospection_modal"
-	cIdRegisterRetrospectionGoalAchievedInput = "retrospection_goal_achieved_input"
-	cIdRegisterRetrospectionLearnedInput      = "retrospection_learned_input"
-	cIdRegisterRetrospectionScoreInput        = "retrospection_score_input"
-	cIdRegisterRetrospectionReasonInput       = "retrospection_reason_input"
+	cIdRegisterRetrospectiveModal             = "retrospective_modal"
+	cIdRegisterRetrospectiveGoalAchievedInput = "retrospective_goal_achieved_input"
+	cIdRegisterRetrospectiveLearnedInput      = "retrospective_learned_input"
+	cIdRegisterRetrospectiveScoreInput        = "retrospective_score_input"
+	cIdRegisterRetrospectiveReasonInput       = "retrospective_reason_input"
 )
 
 // 명령어 목록
@@ -41,7 +41,7 @@ var commands = []*discordgo.ApplicationCommand{
 		Description: "오늘의 다짐을 등록합니다",
 	},
 	{
-		Name:        commandRegisterTodayRetrospection,
+		Name:        commandRegisterTodayRetrospective,
 		Description: "오늘의 회고를 등록합니다.",
 	},
 	{
@@ -65,7 +65,7 @@ var commands = []*discordgo.ApplicationCommand{
 		},
 	},
 	{
-		Name:        commandGetRetrospectionByDate,
+		Name:        commandGetRetrospectivesByDate,
 		Description: "특정 날짜의 회고를 보여줍니다.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{

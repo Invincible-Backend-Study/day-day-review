@@ -18,16 +18,16 @@ var (
 	modalHandlers = map[string]func(*discordgo.Session, *discordgo.InteractionCreate){
 		cIdRegisterUserModal:          interactionRegisterUserModal,
 		cIdRegisterScrumModal:         interactionRegisterScrumModal,
-		cIdRegisterRetrospectionModal: interactionRegisterRetrospectiveModal,
+		cIdRegisterRetrospectiveModal: interactionRegisterRetrospectiveModal,
 	}
 	commandHandlers = map[string]func(*discordgo.Session, *discordgo.InteractionCreate){
 		commandRegisterUser:               registerUser,
 		commandRegisterTodayScrum:         registerTodayScrum,
-		commandRegisterTodayRetrospection: registerTodayRetrospection,
+		commandRegisterTodayRetrospective: registerTodayRetrospective,
 		commandGetTodayScrums:             getTodayScrums,
 		commandGetTodayRetrospectives:     getTodayRetrospectives,
 		commandGetScrumByDate:             getScrumsByDate,
-		commandGetRetrospectionByDate:     getRetrospectivesByDate,
+		commandGetRetrospectivesByDate:    getRetrospectivesByDate,
 	}
 )
 
@@ -82,7 +82,7 @@ func getTodayScrums(session *discordgo.Session, interaction *discordgo.Interacti
 }
 
 // scrumsToString scrum 목록을 문자열로 변환합니다.
-func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
+func scrumsToString(date time.Time, scrums []*model.ScrumDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 다짐 목록: \n", date.Format("2006-01-02")))
 	for _, scrum := range scrums {
@@ -102,7 +102,7 @@ func scrumsToString(date time.Time, scrums []model.ScrumDto) string {
 	return builder.String()
 }
 
-func registerTodayRetrospection(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+func registerTodayRetrospective(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	userId := interaction.Member.User.ID
 	if !service.ExistUser(userId) {
 		sendEphemeralMessage(session, interaction, "회원등록을 먼저 진행해주세요.")
@@ -181,7 +181,7 @@ func getScrumsByDate(session *discordgo.Session, interaction *discordgo.Interact
 }
 
 // retrospectiveToString 회고 목록을 문자열로 변환합니다.
-func retrospectiveToString(date time.Time, retrospectives []model.RetrospectiveDto) string {
+func retrospectiveToString(date time.Time, retrospectives []*model.RetrospectiveDto) string {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("## 오늘(%s)의 회고 목록: \n", date.Format("2006-01-02")))
 	for _, r := range retrospectives {
@@ -261,10 +261,10 @@ func interactionRegisterScrumModal(session *discordgo.Session, interaction *disc
 // interactionRegisterRetrospectiveModal 오늘의 회고 등록 모달의 상호작용을 처리합니다.
 func interactionRegisterRetrospectiveModal(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	inputs := map[string]string{
-		"goalAchieved": cIdRegisterRetrospectionGoalAchievedInput,
-		"learned":      cIdRegisterRetrospectionLearnedInput,
-		"feelScore":    cIdRegisterRetrospectionScoreInput,
-		"feelReason":   cIdRegisterRetrospectionReasonInput,
+		"goalAchieved": cIdRegisterRetrospectiveGoalAchievedInput,
+		"learned":      cIdRegisterRetrospectiveLearnedInput,
+		"feelScore":    cIdRegisterRetrospectiveScoreInput,
+		"feelReason":   cIdRegisterRetrospectiveReasonInput,
 	}
 	data := make(map[string]string)
 	for key, componentId := range inputs {
