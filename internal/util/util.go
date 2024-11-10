@@ -2,6 +2,8 @@ package util
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 	"time"
 )
@@ -33,4 +35,23 @@ func ParseDate(dateStr string) (time.Time, error) {
 	}
 
 	return parsedTime, nil
+}
+
+// LoadFile 파일을 읽어와 바이트 배열로 반환
+func LoadFile(filePath string) ([]byte, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("Failed to close file:", err)
+		}
+	}(file)
+	arr, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+	return arr, nil
 }

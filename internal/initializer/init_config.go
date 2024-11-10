@@ -1,11 +1,10 @@
 package initializer
 
 import (
+	"day-day-review/internal/util"
 	"fmt"
 	"gopkg.in/yaml.v3"
-	"io"
 	"log"
-	"os"
 )
 
 type DiscordConfig struct {
@@ -13,21 +12,11 @@ type DiscordConfig struct {
 	Guild string `yaml:"guild"`
 }
 
+// LoadDiscordConfig discord.yaml 파일을 읽어와 DiscordConfig 구조체에 저장
 func LoadDiscordConfig(filePath string) (*DiscordConfig, error) {
-	file, err := os.Open(filePath)
+	content, err := util.LoadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open discord.yaml: %w", err)
-	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Println("Failed to close discord.yaml:", err)
-		}
-	}(file)
-
-	content, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read discord.yaml: %w", err)
+		log.Println("Failed to load discord.yaml:", err)
 	}
 	var config DiscordConfig
 	if err := yaml.Unmarshal(content, &config); err != nil {
