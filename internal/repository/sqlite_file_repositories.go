@@ -13,27 +13,35 @@ type SQLiteFileRepository struct {
 	db *sql.DB
 }
 
-func NewSQLiteFileRepository(filePath string) (*SQLiteFileRepository, error) {
-	var dbInstance *SQLiteFileRepository
-	var once sync.Once
+var (
+	instance *SQLiteFileRepository
+	once     sync.Once
+)
 
+// NewSQLiteFileRepository 파일 경로를 받아 SQLiteFileRepository 싱글톤 인스턴스를 반환합니다.
+func NewSQLiteFileRepository(filePath string) *SQLiteFileRepository {
 	once.Do(func() {
-		// create database
+		// 데이터베이스 연결 생성
+		var db *sql.DB
 		db, err := sql.Open("sqlite3", filePath)
 		if err != nil {
 			log.Fatalf("database connection failed: %v", err)
+			return
 		}
 
-		// initialize database
-		dbInstance = &SQLiteFileRepository{db: db}
+		// 테이블 생성 등 데이터베이스 초기화
+		instance = &SQLiteFileRepository{db: db}
 		if _, err := db.Exec(createTableQuery); err != nil {
 			log.Fatalf("failed to create tables: %v", err)
+			return
 		}
+
 		log.Println("Database initialization completed")
 	})
 
-	return dbInstance, nil
+	return instance
 }
+
 func (r *SQLiteFileRepository) InsertUser(user model.User) error {
 	stmt, err := r.db.Prepare(insertUserQuery)
 	if err != nil {

@@ -15,11 +15,7 @@ import (
 var repo repository.Repository
 
 func init() {
-	var err error
-	repo, err = repository.NewSQLiteFileRepository("configs/dayday.db")
-	if err != nil {
-		log.Fatalf("Failed to initialize repository: %v", err)
-	}
+	repo = repository.NewSQLiteFileRepository("configs/dayday.db")
 }
 
 // AddUser 함수는 주어진 nickname과 userId로 새로운 사용자 레코드를 데이터베이스에 추가합니다.
