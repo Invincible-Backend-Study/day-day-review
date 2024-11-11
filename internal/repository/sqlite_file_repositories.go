@@ -9,32 +9,41 @@ import (
 	"time"
 )
 
+type SQLiteFileRepository struct {
+	db *sql.DB
+}
+
 var (
-	database *sql.DB
+	instance *SQLiteFileRepository
 	once     sync.Once
 )
 
-func Initialize(filePath string) {
+// NewSQLiteFileRepository 파일 경로를 받아 SQLiteFileRepository 싱글톤 인스턴스를 반환합니다.
+func NewSQLiteFileRepository(filePath string) *SQLiteFileRepository {
 	once.Do(func() {
-		initRepository(filePath)
+		// 데이터베이스 연결 생성
+		var db *sql.DB
+		db, err := sql.Open("sqlite3", filePath)
+		if err != nil {
+			log.Fatalf("database connection failed: %v", err)
+			return
+		}
+
+		// 테이블 생성 등 데이터베이스 초기화
+		instance = &SQLiteFileRepository{db: db}
+		if _, err := db.Exec(createTableQuery); err != nil {
+			log.Fatalf("failed to create tables: %v", err)
+			return
+		}
+
+		log.Println("Database initialization completed")
 	})
+
+	return instance
 }
 
-func initRepository(filePath string) {
-	var err error
-	database, err = sql.Open("sqlite3", filePath)
-	if err != nil {
-		log.Fatalf("database Connection fail: %v", err)
-	}
-	_, err = database.Exec(createTableQuery)
-	if err != nil {
-		log.Println("Table Creation fail: ", err)
-	}
-	log.Println("Database Initialize Completed")
-}
-
-func InsertUser(user model.User) error {
-	stmt, err := database.Prepare(insertUserQuery)
+func (r *SQLiteFileRepository) InsertUser(user model.User) error {
+	stmt, err := r.db.Prepare(insertUserQuery)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %v", err)
 	}
@@ -52,8 +61,8 @@ func InsertUser(user model.User) error {
 	return nil
 }
 
-func ExistUserByUserId(userId string) (bool, error) {
-	stmt, err := database.Prepare(existsUserQuery)
+func (r *SQLiteFileRepository) ExistUserByUserId(userId string) (bool, error) {
+	stmt, err := r.db.Prepare(existsUserQuery)
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare statement: %v", err)
 	}
@@ -72,9 +81,9 @@ func ExistUserByUserId(userId string) (bool, error) {
 	return result == 1, nil
 }
 
-func InsertScrum(scrum *model.Scrum) (*model.Scrum, error) {
+func (r *SQLiteFileRepository) InsertScrum(scrum *model.Scrum) (*model.Scrum, error) {
 	// Prepared statement 생성
-	stmt, err := database.Prepare(insertScrumQuery)
+	stmt, err := r.db.Prepare(insertScrumQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -92,9 +101,9 @@ func InsertScrum(scrum *model.Scrum) (*model.Scrum, error) {
 	return scrum, nil
 }
 
-func InsertRetrospective(retrospective *model.Retrospective) (*model.Retrospective, error) {
+func (r *SQLiteFileRepository) InsertRetrospective(retrospective *model.Retrospective) (*model.Retrospective, error) {
 	// Prepared statement 생성
-	stmt, err := database.Prepare(insertRetrospectiveQuery)
+	stmt, err := r.db.Prepare(insertRetrospectiveQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -112,8 +121,8 @@ func InsertRetrospective(retrospective *model.Retrospective) (*model.Retrospecti
 	return retrospective, nil
 }
 
-func ExistScrumByUserId(userId string, today time.Time) (bool, error) {
-	stmt, err := database.Prepare(existScrumQuery)
+func (r *SQLiteFileRepository) ExistScrumByUserId(userId string, today time.Time) (bool, error) {
+	stmt, err := r.db.Prepare(existScrumQuery)
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -131,8 +140,8 @@ func ExistScrumByUserId(userId string, today time.Time) (bool, error) {
 	return count > 0, nil
 }
 
-func ExistRetrospectiveByUserId(userId string, today time.Time) (bool, error) {
-	stmt, err := database.Prepare(existRetrospectiveQuery)
+func (r *SQLiteFileRepository) ExistRetrospectiveByUserId(userId string, today time.Time) (bool, error) {
+	stmt, err := r.db.Prepare(existRetrospectiveQuery)
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -150,8 +159,8 @@ func ExistRetrospectiveByUserId(userId string, today time.Time) (bool, error) {
 	return count > 0, nil
 }
 
-func SelectScrumListByDate(date time.Time) ([]*model.ScrumDto, error) {
-	stmt, err := database.Prepare(selectTodayScrumQuery)
+func (r *SQLiteFileRepository) SelectScrumListByDate(date time.Time) ([]*model.ScrumDto, error) {
+	stmt, err := r.db.Prepare(selectTodayScrumQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -190,8 +199,8 @@ func SelectScrumListByDate(date time.Time) ([]*model.ScrumDto, error) {
 	return scrums, nil
 }
 
-func SelectRetrospectiveListByDate(date time.Time) ([]*model.RetrospectiveDto, error) {
-	stmt, err := database.Prepare(selectTodayRetrospectiveQuery)
+func (r *SQLiteFileRepository) SelectRetrospectiveListByDate(date time.Time) ([]*model.RetrospectiveDto, error) {
+	stmt, err := r.db.Prepare(selectTodayRetrospectiveQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
