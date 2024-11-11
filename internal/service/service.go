@@ -12,13 +12,15 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
+var repo repository.Repository
+
 func init() {
-	repository.Initialize("configs/dayday.db")
+	repo = repository.NewSQLiteFileRepository("configs/dayday.db")
 }
 
 // AddUser 함수는 주어진 nickname과 userId로 새로운 사용자 레코드를 데이터베이스에 추가합니다.
 func AddUser(nickname string, userId string) string {
-	err := repository.InsertUser(model.User{Name: nickname, DiscordUserId: userId})
+	err := repo.InsertUser(model.User{Name: nickname, DiscordUserId: userId})
 	if err != nil {
 		log.Println("Failed to insert user: ", err)
 
@@ -40,7 +42,7 @@ func AddUser(nickname string, userId string) string {
 }
 
 func ExistUser(userId string) bool {
-	exist, err := repository.ExistUserByUserId(userId)
+	exist, err := repo.ExistUserByUserId(userId)
 	if err != nil {
 		log.Println("Failed to select user: ", err)
 		return false
@@ -61,7 +63,7 @@ func CreateTodayScrum(userId, goal, commitment, feelReason string, feelScore int
 		CreatedAt: util.GetTodayInKST(),
 	}
 
-	_, err := repository.InsertScrum(&scrum)
+	_, err := repo.InsertScrum(&scrum)
 	if err != nil {
 		log.Println("Error inserting scrum data:", err)
 		return "에러가 발생했습니다."
@@ -83,7 +85,7 @@ func CreateTodayRetrospectives(userId, goalAchieved, learned, feelReason string,
 		CreatedAt: util.GetTodayInKST(),
 	}
 
-	_, err := repository.InsertRetrospective(&retrospective)
+	_, err := repo.InsertRetrospective(&retrospective)
 	if err != nil {
 		log.Println("Error inserting Retrospectives data:", err)
 		return "에러가 발생했습니다."
@@ -95,7 +97,7 @@ func CreateTodayRetrospectives(userId, goalAchieved, learned, feelReason string,
 // ExistTodayScrum 주어진 사용자가 오늘의 다짐을 작성했는지 여부를 반환합니다.
 func ExistTodayScrum(userId string) (bool, error) {
 	today := util.GetTodayInKST()
-	result, err := repository.ExistScrumByUserId(userId, today)
+	result, err := repo.ExistScrumByUserId(userId, today)
 	if err != nil {
 		log.Printf("Error select scrum data: %v - %s", err, userId)
 		return false, fmt.Errorf("failed to select scrum data: %w", err)
@@ -106,7 +108,7 @@ func ExistTodayScrum(userId string) (bool, error) {
 // ExistTodayRetrospective 주어진 사용자가 오늘의 회고를 작성했는지 여부를 반환합니다.
 func ExistTodayRetrospective(userId string) (bool, error) {
 	today := util.GetTodayInKST()
-	result, err := repository.ExistRetrospectiveByUserId(userId, today)
+	result, err := repo.ExistRetrospectiveByUserId(userId, today)
 	if err != nil {
 		log.Printf("Error select retrospective data: %v - %s", err, userId)
 		return false, fmt.Errorf("failed to select retrospective data: %w", err)
@@ -116,7 +118,7 @@ func ExistTodayRetrospective(userId string) (bool, error) {
 
 // GetTodayScrums 작성된 오늘의 다짐을 모두 반환합니다.
 func GetTodayScrums() ([]*model.ScrumDto, error) {
-	scrums, err := repository.SelectScrumListByDate(util.GetTodayInKST())
+	scrums, err := repo.SelectScrumListByDate(util.GetTodayInKST())
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +127,7 @@ func GetTodayScrums() ([]*model.ScrumDto, error) {
 
 // GetTodayRetrospectives 작성된 오늘의 회고를 모두 반환합니다.
 func GetTodayRetrospectives() ([]*model.RetrospectiveDto, error) {
-	scrums, err := repository.SelectRetrospectiveListByDate(util.GetTodayInKST())
+	scrums, err := repo.SelectRetrospectiveListByDate(util.GetTodayInKST())
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +136,7 @@ func GetTodayRetrospectives() ([]*model.RetrospectiveDto, error) {
 
 // GetScrumsByDate 작성된 특정 날짜의 다짐을 모두 반환합니다.
 func GetScrumsByDate(date time.Time) ([]*model.ScrumDto, error) {
-	scrums, err := repository.SelectScrumListByDate(date)
+	scrums, err := repo.SelectScrumListByDate(date)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +145,7 @@ func GetScrumsByDate(date time.Time) ([]*model.ScrumDto, error) {
 
 // GetRetrospectivesByDate 작성된 특정 날짜의 회고를 모두 반환합니다.
 func GetRetrospectivesByDate(date time.Time) ([]*model.RetrospectiveDto, error) {
-	scrums, err := repository.SelectRetrospectiveListByDate(date)
+	scrums, err := repo.SelectRetrospectiveListByDate(date)
 	if err != nil {
 		return nil, err
 	}
