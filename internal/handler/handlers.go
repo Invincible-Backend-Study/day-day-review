@@ -6,6 +6,7 @@ import (
 	"day-day-review/internal/util"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ var (
 		commandGetTodayRetrospectives:     getTodayRetrospectives,
 		commandGetScrumByDate:             getScrumsByDate,
 		commandGetRetrospectivesByDate:    getRetrospectivesByDate,
+		commandRandomUserPick:             getRandomUserByChannel,
 	}
 )
 
@@ -178,6 +180,42 @@ func getScrumsByDate(session *discordgo.Session, interaction *discordgo.Interact
 		logErrorAndSendMessage(session, interaction, "다짐을 불러오는 중 오류가 발생했습니다.", err)
 	}
 	sendMessage(session, interaction, scrumsToString(date, scrums))
+}
+
+func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	channel, err := session.Channel(interaction.ChannelID)
+	if err != nil {
+		logErrorAndSendMessage(session, interaction, "채널을 불러오는 중 오류가 발생했습니다.", err)
+		return
+	}
+	guild, err := session.State.Guild(channel.GuildID)
+	if err != nil {
+		logErrorAndSendMessage(session, interaction, "서버 정보를 불러오는 중 오류가 발생했습니다.", err)
+		return
+	}
+	var members []*discordgo.Member
+	memberMap := make(map[string]*discordgo.Member)
+	for _, member := range guild.Members {
+		memberMap[member.User.ID] = member
+	}
+
+	for _, vs := range guild.VoiceStates {
+		if vs.ChannelID == channel.ID {
+			if member, ok := memberMap[vs.UserID]; ok {
+				members = append(members, member)
+			}
+		}
+	}
+	if len(members) == 0 {
+		sendMessage(session, interaction, "음성 채널에 사용자가 없습니다.")
+		return
+	}
+	randomMember := members[rand.Intn(len(members))]
+	username := randomMember.Nick
+	if username == "" {
+		username = randomMember.User.GlobalName
+	}
+	sendMessage(session, interaction, fmt.Sprintf("랜덤으로 선택된 사람은 %s입니다!", username))
 }
 
 // retrospectiveToString 회고 목록을 문자열로 변환합니다.
