@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -54,4 +55,11 @@ func LoadFile(filePath string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 	return arr, nil
+}
+
+// PickRandomNumber 0부터 upperBound-1 사이의 랜덤한 숫자를 반환
+func PickRandomNumber(upperBound int) int {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	return r.Intn(upperBound - 1)
 }

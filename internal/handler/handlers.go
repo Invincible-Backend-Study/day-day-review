@@ -6,7 +6,6 @@ import (
 	"day-day-review/internal/util"
 	"fmt"
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -217,7 +216,7 @@ func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.I
 	}
 
 	// 음성 채널에 있는 사용자 중 랜덤으로 한 명을 선택합니다.
-	randomMember := members[rand.Intn(len(members))]
+	randomMember := members[util.PickRandomNumber(len(members))]
 	// 사용자의 닉네임이 없으면 사용자 이름을 사용합니다.
 	username := randomMember.Nick
 	if username == "" {
