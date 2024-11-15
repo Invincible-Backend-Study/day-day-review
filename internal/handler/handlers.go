@@ -182,23 +182,27 @@ func getScrumsByDate(session *discordgo.Session, interaction *discordgo.Interact
 	sendMessage(session, interaction, scrumsToString(date, scrums))
 }
 
+// getRandomUserByChannel 채널에 있는 사용자 중 랜덤으로 한 명을 선택합니다.
 func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	channel, err := session.Channel(interaction.ChannelID)
+	// 채널 정보를 불러오는 중 오류가 발생하면 에러 메시지를 전송합니다.
 	if err != nil {
 		logErrorAndSendMessage(session, interaction, "채널을 불러오는 중 오류가 발생했습니다.", err)
 		return
 	}
 	guild, err := session.State.Guild(channel.GuildID)
+	// 서버 정보를 불러오는 중 오류가 발생하면 에러 메시지를 전송합니다.
 	if err != nil {
 		logErrorAndSendMessage(session, interaction, "서버 정보를 불러오는 중 오류가 발생했습니다.", err)
 		return
 	}
-	var members []*discordgo.Member
-	memberMap := make(map[string]*discordgo.Member)
+	var members []*discordgo.Member                 // 음성 채널에 있는 사용자 목록을 저장합니다.
+	memberMap := make(map[string]*discordgo.Member) // 사용자 ID를 키로 사용자 정보를 저장합니다.
 	for _, member := range guild.Members {
 		memberMap[member.User.ID] = member
 	}
 
+	// 음성 채널에 있는 사용자 목록을 불러옵니다.
 	for _, vs := range guild.VoiceStates {
 		if vs.ChannelID == channel.ID {
 			if member, ok := memberMap[vs.UserID]; ok {
@@ -206,11 +210,15 @@ func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.I
 			}
 		}
 	}
+	// 음성 채널에 사용자가 없으면 에러 메시지를 전송합니다.
 	if len(members) == 0 {
 		sendMessage(session, interaction, "음성 채널에 사용자가 없습니다.")
 		return
 	}
+
+	// 음성 채널에 있는 사용자 중 랜덤으로 한 명을 선택합니다.
 	randomMember := members[rand.Intn(len(members))]
+	// 사용자의 닉네임이 없으면 사용자 이름을 사용합니다.
 	username := randomMember.Nick
 	if username == "" {
 		username = randomMember.User.GlobalName
