@@ -189,6 +189,12 @@ func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.I
 		logErrorAndSendMessage(session, interaction, "채널을 불러오는 중 오류가 발생했습니다.", err)
 		return
 	}
+	// 음성 채널이 아니면 에러 메시지를 전송합니다.
+	if channel.Type != discordgo.ChannelTypeGuildVoice {
+		sendMessage(session, interaction, "음성 채널에서만 사용할 수 있는 명령어입니다.")
+		return
+	}
+	log.Printf("Channel type: %v", channel.Type)
 	guild, err := session.State.Guild(channel.GuildID)
 	// 서버 정보를 불러오는 중 오류가 발생하면 에러 메시지를 전송합니다.
 	if err != nil {
