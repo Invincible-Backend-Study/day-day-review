@@ -11,6 +11,7 @@ const (
 	commandGetTodayRetrospectives     = "오늘-회고-보기"
 	commandGetScrumByDate             = "다짐-보기"
 	commandGetRetrospectivesByDate    = "회고-보기"
+	commandRandomUserPick             = "사용자-랜덤-선택"
 )
 
 const (
@@ -75,5 +76,9 @@ var commands = []*discordgo.ApplicationCommand{
 				Required:    true,
 			},
 		},
+	},
+	{
+		Name:        commandRandomUserPick,
+		Description: "채널에 있는 사용자 중 랜덤으로 한 명을 선택합니다.",
 	},
 }

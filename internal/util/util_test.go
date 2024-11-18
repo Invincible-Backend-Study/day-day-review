@@ -108,3 +108,14 @@ func TestLoadFile_InvalidFile(t *testing.T) {
 		t.Errorf("expected error, but nil")
 	}
 }
+
+func TestPickRandomNumber(t *testing.T) {
+	// Arrange
+	upperBound := 10
+	// Act
+	actual := PickRandomNumber(upperBound)
+	// Assert
+	if actual < 0 || actual >= upperBound {
+		t.Errorf("expected 0 <= actual < %d, but got %d", upperBound, actual)
+	}
+}
