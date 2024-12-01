@@ -64,5 +64,5 @@ func PickRandomNumber(upperBound int) int {
 	}
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
-	return r.Intn(upperBound - 1)
+	return r.Intn(upperBound)
 }

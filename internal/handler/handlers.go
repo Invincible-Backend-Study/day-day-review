@@ -194,7 +194,6 @@ func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.I
 		sendMessage(session, interaction, "음성 채널에서만 사용할 수 있는 명령어입니다.")
 		return
 	}
-	log.Printf("Channel type: %v", channel.Type)
 	guild, err := session.State.Guild(channel.GuildID)
 	// 서버 정보를 불러오는 중 오류가 발생하면 에러 메시지를 전송합니다.
 	if err != nil {
@@ -215,6 +214,7 @@ func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.I
 			}
 		}
 	}
+	log.Printf("Members: %+v", members)
 	// 음성 채널에 사용자가 없으면 에러 메시지를 전송합니다.
 	if len(members) == 0 {
 		sendMessage(session, interaction, "음성 채널에 사용자가 없습니다.")
