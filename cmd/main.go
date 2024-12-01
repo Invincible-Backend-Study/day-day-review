@@ -32,7 +32,7 @@ func main() {
 		log.Fatal("error creating Discord session,", err)
 	}
 
-	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMessageReactions | discordgo.IntentsGuilds
+	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMessageReactions | discordgo.IntentsGuilds | discordgo.IntentsGuildVoiceStates | discordgo.IntentsGuildMembers
 
 	discord.AddHandler(handler.EasterEggHandler)
 	discord.AddHandler(handler.RegisterCommands)
