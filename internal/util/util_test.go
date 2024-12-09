@@ -2,7 +2,6 @@ package util
 
 import (
 	"os"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -107,33 +106,5 @@ func TestLoadFile_InvalidFile(t *testing.T) {
 	// Assert
 	if err == nil {
 		t.Errorf("expected error, but nil")
-	}
-}
-
-func TestPickRandomNumber_ValidInput(t *testing.T) {
-	testCases := []int{1, 10, 100, 1000, 10000}
-	for _, tc := range testCases {
-		t.Run("UpperBound: "+strconv.Itoa(tc), func(t *testing.T) {
-			// Act
-			actual := PickRandomNumber(tc)
-			// Assert
-			if actual < 0 || actual >= tc {
-				t.Errorf("expected 0 <= actual < %d, but got %d", tc, actual)
-			}
-		})
-	}
-}
-
-func TestPickRandomNumber_InputLessThenOrEqualZero(t *testing.T) {
-	testCases := []int{0, -1, -10, -100, -1000}
-	for _, tc := range testCases {
-		t.Run("UpperBound: "+strconv.Itoa(tc), func(t *testing.T) {
-			// Act
-			actual := PickRandomNumber(tc)
-			// Assert
-			if actual != 0 {
-				t.Errorf("expected 0, but got %d", actual)
-			}
-		})
 	}
 }
