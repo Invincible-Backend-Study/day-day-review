@@ -80,5 +80,14 @@ var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        commandRandomUserPick,
 		Description: "채널에 있는 사용자 중 랜덤으로 한 명을 선택합니다.",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "count",
+				Description: "랜덤으로 선택할 사용자 수를 입력해주세요.",
+				Required:    false,
+				MinValue:    func() *float64 { v := 1.0; return &v }(),
+			},
+		},
 	},
 }
