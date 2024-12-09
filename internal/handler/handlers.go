@@ -6,6 +6,7 @@ import (
 	"day-day-review/internal/util"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -183,52 +184,54 @@ func getScrumsByDate(session *discordgo.Session, interaction *discordgo.Interact
 
 // getRandomUserByChannel 채널에 있는 사용자 중 랜덤으로 한 명을 선택합니다.
 func getRandomUserByChannel(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
-	channel, err := session.Channel(interaction.ChannelID)
+	count := 1
+	// 옵션을 받았을 경우 옵션 값을 사용합니다.
+	if options := interaction.ApplicationCommandData().Options; len(options) > 0 {
+		count = int(options[0].IntValue())
+	}
+	log.Println("GetRandomUserByChannel | Received count:", count)
+	guild, err := session.State.Guild(guildId)
 	// 채널 정보를 불러오는 중 오류가 발생하면 에러 메시지를 전송합니다.
-	if err != nil {
-		logErrorAndSendMessage(session, interaction, "채널을 불러오는 중 오류가 발생했습니다.", err)
-		return
-	}
-	// 음성 채널이 아니면 에러 메시지를 전송합니다.
-	if channel.Type != discordgo.ChannelTypeGuildVoice {
-		sendMessage(session, interaction, "음성 채널에서만 사용할 수 있는 명령어입니다.")
-		return
-	}
-	guild, err := session.State.Guild(channel.GuildID)
-	// 서버 정보를 불러오는 중 오류가 발생하면 에러 메시지를 전송합니다.
 	if err != nil {
 		logErrorAndSendMessage(session, interaction, "서버 정보를 불러오는 중 오류가 발생했습니다.", err)
 		return
 	}
-	var members []*discordgo.Member                 // 음성 채널에 있는 사용자 목록을 저장합니다.
-	memberMap := make(map[string]*discordgo.Member) // 사용자 ID를 키로 사용자 정보를 저장합니다.
-	for _, member := range guild.Members {
-		memberMap[member.User.ID] = member
-	}
-
-	// 음성 채널에 있는 사용자 목록을 불러옵니다.
-	for _, vs := range guild.VoiceStates {
-		if vs.ChannelID == channel.ID {
-			if member, ok := memberMap[vs.UserID]; ok {
-				members = append(members, member)
+	// 채널에 참여중인 사용자를 불러옵니다.
+	var members []string
+	for _, voiceState := range guild.VoiceStates {
+		if voiceState.ChannelID == interaction.ChannelID {
+			member, err := session.GuildMember(guildId, voiceState.UserID)
+			if err != nil {
+				log.Printf("Error getting member: %v", err)
+				continue
 			}
+			username := member.Nick
+			if username == "" {
+				username = member.User.GlobalName
+			}
+			members = append(members, username)
 		}
 	}
-	log.Printf("Members: %+v", members)
-	// 음성 채널에 사용자가 없으면 에러 메시지를 전송합니다.
-	if len(members) == 0 {
-		sendMessage(session, interaction, "음성 채널에 사용자가 없습니다.")
+	// 채널에 참여중인 사용자가 없거나 요청한 사용자 수가 채널에 참여중인 사용자 수보다 많을 경우 에러 메시지를 전송합니다.
+	log.Printf("GetRandomUserByChannel | Current member arr: %+v", members)
+	if len(members) == 0 || count > len(members) {
+		logErrorAndSendMessage(session, interaction, "채널에 참여중인 사용자가 부족합니다.", nil)
 		return
 	}
-
-	// 음성 채널에 있는 사용자 중 랜덤으로 한 명을 선택합니다.
-	randomMember := members[util.PickRandomNumber(len(members))]
-	// 사용자의 닉네임이 없으면 사용자 이름을 사용합니다.
-	username := randomMember.Nick
-	if username == "" {
-		username = randomMember.User.GlobalName
+	// 모든 사용자를 선택할 경우 모든 사용자를 선택했다는 메시지를 전송합니다.
+	if count == len(members) {
+		sendMessage(session, interaction, "모든 사용자가 선택되었습니다.")
+		return
 	}
-	sendMessage(session, interaction, fmt.Sprintf("랜덤으로 선택된 사람은 %s입니다!", username))
+	// 랜덤으로 사용자를 선택합니다.
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r.Shuffle(len(members), func(i, j int) {
+		members[i], members[j] = members[j], members[i]
+	})
+	members = members[:count]
+	// 선택된 사용자를 메시지로 전송합니다.
+	sendMessage(session, interaction, fmt.Sprintf("선택된 사람은 %v 입니다!", strings.Join(members, ", ")))
+	return
 }
 
 // retrospectiveToString 회고 목록을 문자열로 변환합니다.
